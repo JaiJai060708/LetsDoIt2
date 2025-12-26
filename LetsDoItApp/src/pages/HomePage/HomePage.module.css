@@ -6,9 +6,9 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(135deg, #4a90d9 0%, #2d6cb5 100%);
   padding: 20px 0;
-  box-shadow: 0 4px 20px rgba(50, 163, 188, 0.3);
+  box-shadow: 0 2px 12px rgba(45, 108, 181, 0.15);
 }
 
 .headerContent {
@@ -20,14 +20,6 @@
   justify-content: space-between;
 }
 
-.title {
-  font-size: 28px;
-  font-weight: 700;
-  color: white;
-  margin: 0;
-  letter-spacing: -0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
 
 .main {
   flex: 1;
@@ -66,10 +58,6 @@
     flex-direction: column;
     gap: 16px;
     text-align: center;
-  }
-
-  .title {
-    font-size: 24px;
   }
 
   .main {

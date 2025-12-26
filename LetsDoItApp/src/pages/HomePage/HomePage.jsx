@@ -4,6 +4,7 @@ import WeeklyTaskList from '../../components/WeeklyTaskList';
 import TaskModal from '../../components/TaskModal';
 import NavToggle from '../../components/NavToggle';
 import TodoViewToggle from '../../components/TodoViewToggle';
+import Logo from '../../components/Logo';
 import styles from './HomePage.module.css';
 
 function HomePage() {
@@ -33,7 +34,7 @@ function HomePage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerContent}>
-          <h1 className={styles.title}>Let&apos;s Do It!</h1>
+          <Logo />
           <NavToggle />
         </div>
       </header>
