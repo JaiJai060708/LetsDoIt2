@@ -29,14 +29,30 @@
 }
 
 @media (max-width: 768px) {
+  .header {
+    padding: 10px 0;
+  }
+
   .headerContent {
-    flex-direction: column;
-    gap: 16px;
-    text-align: center;
+    padding: 0 12px;
   }
 
   .main {
-    padding: 20px 16px;
+    padding: 12px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 8px 0;
+  }
+
+  .headerContent {
+    padding: 0 8px;
+  }
+
+  .main {
+    padding: 8px 6px;
   }
 }
 

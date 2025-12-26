@@ -38,7 +38,9 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
   const editInputRef = useRef(null);
 
   useEffect(() => {
-    if (!compact) {
+    // Don't auto-focus on mobile to prevent keyboard from opening unexpectedly
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (!compact && !isMobile) {
       inputRef.current?.focus();
     }
     loadTags();

@@ -11,6 +11,24 @@
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  .container {
+    height: calc(100vh - 100px);
+    height: calc(100dvh - 100px);
+    min-height: 300px;
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    height: calc(100vh - 80px);
+    height: calc(100dvh - 80px);
+    min-height: 250px;
+    border-radius: 8px;
+  }
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -30,6 +48,18 @@
   flex: 1;
   overflow-y: auto;
   padding: 16px 24px;
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 8px 10px;
+  }
 }
 
 .section {

@@ -508,10 +508,65 @@
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .addTask {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    gap: 8px;
+    padding: 10px 12px;
+    background: linear-gradient(to right, #f8fafb, #f1f5f9);
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .input {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+
+  .button {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+
+  .tagBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
 @media (max-width: 480px) {
+  .addTask {
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .input {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 16px;
+  }
+
+  .button {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 16px;
+  }
+
+  .tagBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
   .tagDropdown {
-    width: 280px;
-    right: -40px;
+    width: 260px;
+    right: -30px;
   }
 
   .tagActions {
