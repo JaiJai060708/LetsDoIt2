@@ -11,4 +11,5 @@ export { default as TagSelector } from './TagSelector';
 export { default as HabitTracker } from './HabitTracker';
 export { default as HabitYearChart } from './HabitYearChart';
 export { default as HabitSurvey } from './HabitSurvey';
+export { default as HappinessTask } from './HappinessTask';
 

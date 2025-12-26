@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { addDays } from 'date-fns';
-import { getAllTasks, updateTask, getSectionExpandStates, setSectionExpandState } from '../../db/database';
+import { getAllTasks, updateTask, getSectionExpandStates, setSectionExpandState, getHabitByDate } from '../../db/database';
 import { categorizeDailyTasks, sortTasks, getTodayStart } from '../../utils/dateUtils';
+import { getTodayKey } from '../../utils/habitUtils';
 import TaskList from '../TaskList';
 import AddTask from '../AddTask';
+import HappinessTask from '../HappinessTask';
 import styles from './DailyTaskList.module.css';
 
 // Section configuration
@@ -27,6 +29,7 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [isLoading, setIsLoading] = useState(true);
   const [expandStates, setExpandStates] = useState({});
   const [expandStatesLoaded, setExpandStatesLoaded] = useState(false);
+  const [showHappinessTask, setShowHappinessTask] = useState(false);
 
   // Load expand states from DB
   const loadExpandStates = useCallback(async () => {
@@ -37,6 +40,18 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
       console.error('Failed to load expand states:', error);
     } finally {
       setExpandStatesLoaded(true);
+    }
+  }, []);
+
+  // Check if today's happiness survey is completed
+  const checkHappinessSurvey = useCallback(async () => {
+    try {
+      const todayKey = getTodayKey();
+      const todayHabit = await getHabitByDate(todayKey);
+      setShowHappinessTask(!todayHabit);
+    } catch (error) {
+      console.error('Failed to check happiness survey:', error);
+      setShowHappinessTask(true); // Show task if check fails
     }
   }, []);
 
@@ -62,13 +77,17 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   useEffect(() => {
     loadTasks();
     loadExpandStates();
+    checkHappinessSurvey();
     
     // Reload when window regains focus
-    const handleFocus = () => loadTasks();
+    const handleFocus = () => {
+      loadTasks();
+      checkHappinessSurvey();
+    };
     window.addEventListener('focus', handleFocus);
     
     return () => window.removeEventListener('focus', handleFocus);
-  }, [loadTasks, loadExpandStates]);
+  }, [loadTasks, loadExpandStates, checkHappinessSurvey]);
 
   const handleTaskCreated = () => {
     loadTasks();
@@ -211,7 +230,8 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     tasks.todayTasks.length === 0 &&
     tasks.tomorrowTasks.length === 0 &&
     tasks.upcoming.length === 0 &&
-    tasks.someday.length === 0;
+    tasks.someday.length === 0 &&
+    !showHappinessTask;
 
   if (isLoading || !expandStatesLoaded) {
     return (
@@ -234,11 +254,15 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     const sectionTasks = tasks[section.tasksKey];
     const taskCount = sectionTasks.length;
     const isExpanded = isSectionExpanded(section.id, taskCount);
+    const isTodaySection = section.id === 'today';
     
     // Skip overdue section if empty
     if (section.isOverdue && taskCount === 0) {
       return null;
     }
+
+    // Badge count includes happiness task if shown in today section
+    const displayCount = isTodaySection && showHappinessTask ? taskCount + 1 : taskCount;
 
     return (
       <section key={section.id} className={styles.section}>
@@ -254,17 +278,18 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
             {section.title}
           </h3>
           <span className={`${styles.badge} ${section.isOverdue ? styles.overdueBadge : ''}`}>
-            {taskCount}
+            {displayCount}
           </span>
         </button>
         <div className={`${styles.sectionContent} ${isExpanded ? styles.expanded : ''}`}>
+          {isTodaySection && showHappinessTask && <HappinessTask />}
           <TaskList
             droppableId={section.id}
             tasks={sectionTasks}
             onUpdate={loadTasks}
             onSelectTask={onSelectTask}
             selectedTask={selectedTask}
-            emptyMessage={taskCount === 0 ? `No ${section.title.toLowerCase()} tasks` : ''}
+            emptyMessage={taskCount === 0 && !(isTodaySection && showHappinessTask) ? `No ${section.title.toLowerCase()} tasks` : ''}
           />
         </div>
       </section>
