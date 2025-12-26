@@ -1,19 +1,26 @@
 import styles from './ViewToggle.module.css';
 
-function ViewToggle({ isWeekly, onToggle }) {
+// View modes: 'daily', 'weekly', 'habits'
+function ViewToggle({ view, onViewChange }) {
   return (
     <div className={styles.container}>
       <button
-        className={`${styles.option} ${!isWeekly ? styles.active : ''}`}
-        onClick={() => onToggle(false)}
+        className={`${styles.option} ${view === 'daily' ? styles.active : ''}`}
+        onClick={() => onViewChange('daily')}
       >
         Daily
       </button>
       <button
-        className={`${styles.option} ${isWeekly ? styles.active : ''}`}
-        onClick={() => onToggle(true)}
+        className={`${styles.option} ${view === 'weekly' ? styles.active : ''}`}
+        onClick={() => onViewChange('weekly')}
       >
         Weekly
+      </button>
+      <button
+        className={`${styles.option} ${view === 'habits' ? styles.active : ''}`}
+        onClick={() => onViewChange('habits')}
+      >
+        Mood
       </button>
     </div>
   );

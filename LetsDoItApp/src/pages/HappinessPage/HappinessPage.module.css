@@ -36,31 +36,6 @@
   padding: 32px 24px;
 }
 
-.todoContainer {
-  width: 100%;
-  max-width: 600px;
-  transition: max-width 0.3s ease;
-}
-
-.todoContainer.weekly {
-  max-width: 1200px;
-}
-
-.todoHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 0 4px;
-}
-
-.todoTitle {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
 @media (max-width: 768px) {
   .headerContent {
     flex-direction: column;
@@ -74,16 +49,6 @@
 
   .main {
     padding: 20px 16px;
-  }
-
-  .todoHeader {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-
-  .todoTitle {
-    text-align: center;
   }
 }
 

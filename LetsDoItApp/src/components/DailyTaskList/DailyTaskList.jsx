@@ -16,7 +16,7 @@ const SECTIONS = [
   { id: 'someday', title: 'Someday', tasksKey: 'someday' },
 ];
 
-function DailyTaskList({ onSelectTask, selectedTask }) {
+function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [tasks, setTasks] = useState({
     unfinished: [],
     todayTasks: [],
@@ -216,9 +216,11 @@ function DailyTaskList({ onSelectTask, selectedTask }) {
   if (isLoading || !expandStatesLoaded) {
     return (
       <div className={styles.container}>
-        <div className={styles.header}>
-          <h2 className={styles.title}>To Do</h2>
-        </div>
+        {!hideHeader && (
+          <div className={styles.header}>
+            <h2 className={styles.title}>To Do</h2>
+          </div>
+        )}
         <div className={styles.loading}>
           <div className={styles.spinner}></div>
           <span>Loading tasks...</span>
@@ -271,9 +273,11 @@ function DailyTaskList({ onSelectTask, selectedTask }) {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>To Do</h2>
-      </div>
+      {!hideHeader && (
+        <div className={styles.header}>
+          <h2 className={styles.title}>To Do</h2>
+        </div>
+      )}
 
       <div className={styles.content}>
         {hasNoTasks ? (

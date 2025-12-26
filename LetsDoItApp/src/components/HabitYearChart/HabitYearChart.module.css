@@ -1,0 +1,237 @@
+.container {
+  width: 100%;
+}
+
+.yearHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.yearTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 100px;
+  text-align: center;
+  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+}
+
+.yearButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--primary-color);
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.yearButton:hover {
+  background: var(--primary-dark);
+  transform: scale(1.05);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(10px);
+}
+
+.legendLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legendScale {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-light);
+}
+
+.legendItem {
+  width: 22px;
+  height: 14px;
+  border-radius: 0;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.legendItem:hover {
+  transform: scaleY(1.4);
+  z-index: 1;
+}
+
+.legendLabels {
+  display: flex;
+  justify-content: space-between;
+  width: 220px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.monthsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.monthWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monthTitle {
+  width: 80px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.daysGrid {
+  display: flex;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.dayContainer {
+  position: relative;
+  width: 20px;
+  height: 36px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.5px solid rgba(128, 128, 128, 0.2);
+  border-radius: 0;
+}
+
+.dayContainer:hover {
+  transform: scaleY(1.15);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.dayNumber {
+  font-size: 7px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.dayContainer:hover .dayNumber {
+  opacity: 1;
+}
+
+.dayContainer.noData {
+  background: #e5e7eb;
+}
+
+.dayContainer.noData:hover {
+  background: #d1d5db;
+}
+
+.dayContainer.today {
+  border: 2px solid var(--primary-color);
+  box-shadow: inset 0 0 0 1px var(--primary-color);
+}
+
+.dayContainer.future {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.dayContainer.future:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.dayContainer.selected {
+  border-top: 3px solid var(--primary-color);
+  border-bottom: 3px solid var(--primary-color);
+}
+
+.dayContainer.rangeStart {
+  border-left: 3px solid var(--primary-color);
+}
+
+.dayContainer.rangeEnd {
+  border-right: 3px solid var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .monthWrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .monthTitle {
+    text-align: left;
+    width: auto;
+    font-size: 13px;
+  }
+
+  .daysGrid {
+    flex-wrap: wrap;
+    max-width: 100%;
+    gap: 1px;
+  }
+
+  .dayContainer {
+    width: 24px;
+    height: 32px;
+    border-radius: 2px;
+  }
+
+  .dayNumber {
+    font-size: 8px;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .yearTitle {
+    font-size: 22px;
+  }
+
+  .legend {
+    padding: 8px 12px;
+  }
+
+  .legendItem {
+    width: 16px;
+    height: 10px;
+  }
+
+  .dayContainer {
+    width: 20px;
+    height: 28px;
+  }
+}
+

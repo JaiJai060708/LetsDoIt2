@@ -19,7 +19,7 @@ import styles from './WeeklyTaskList.module.css';
 
 const DAY_IDS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-function WeeklyTaskList({ onSelectTask, selectedTask }) {
+function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weekTasks, setWeekTasks] = useState(Array(7).fill([]));
   const [isLoading, setIsLoading] = useState(true);

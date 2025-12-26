@@ -1,9 +1,10 @@
-import { openDB } from 'idb';
+import { openDB, deleteDB } from 'idb';
 
 const DB_NAME = 'LetsDoItDB';
-const DB_VERSION = 3;
+const DB_VERSION = 5;
 const TASKS_STORE = 'tasks';
 const SETTINGS_STORE = 'settings';
+const HABITS_STORE = 'habits';
 
 // Default tags that come pre-configured
 const DEFAULT_TAGS = [
@@ -13,12 +14,21 @@ const DEFAULT_TAGS = [
   { id: 'errands', name: 'Errands', color: '#f59e0b' },
 ];
 
+// Cache the database connection
+let dbPromise = null;
+
 /**
  * Initialize the IndexedDB database
  */
 export async function initDB() {
-  return openDB(DB_NAME, DB_VERSION, {
+  if (dbPromise) {
+    return dbPromise;
+  }
+
+  dbPromise = openDB(DB_NAME, DB_VERSION, {
     upgrade(db, oldVersion, newVersion, transaction) {
+      console.log(`Upgrading database from v${oldVersion} to v${newVersion}`);
+      
       // Tasks store (v1)
       if (!db.objectStoreNames.contains(TASKS_STORE)) {
         const store = db.createObjectStore(TASKS_STORE, { keyPath: 'id' });
@@ -37,8 +47,38 @@ export async function initDB() {
         const settingsStore = transaction.objectStore(SETTINGS_STORE);
         settingsStore.put({ key: 'availableTags', value: DEFAULT_TAGS });
       }
+      // Habits store (v4) - for mood/habit tracking
+      if (!db.objectStoreNames.contains(HABITS_STORE)) {
+        const habitsStore = db.createObjectStore(HABITS_STORE, { keyPath: 'id' });
+        habitsStore.createIndex('date', 'date', { unique: true });
+        habitsStore.createIndex('year', 'year');
+        console.log('Created habits store');
+      }
+    },
+    blocked() {
+      console.warn('Database upgrade blocked. Please close other tabs using this app.');
+    },
+    blocking() {
+      // Close the connection to unblock the upgrade
+      dbPromise?.then(db => db.close());
+      dbPromise = null;
     },
   });
+
+  return dbPromise;
+}
+
+/**
+ * Force re-initialize the database connection
+ * Useful when the database schema has changed
+ */
+export async function reinitDB() {
+  if (dbPromise) {
+    const db = await dbPromise;
+    db.close();
+    dbPromise = null;
+  }
+  return initDB();
 }
 
 /**
@@ -220,5 +260,140 @@ export async function deleteTag(tagId) {
   const filtered = tags.filter(t => t.id !== tagId);
   await setSetting('availableTags', filtered);
   return filtered;
+}
+
+// ============================================
+// Habit Tracking Functions
+// ============================================
+
+/**
+ * Ensure the habits store exists, reinitialize DB if needed
+ */
+async function ensureHabitsStore() {
+  let db = await initDB();
+  
+  // Check if habits store exists
+  if (!db.objectStoreNames.contains(HABITS_STORE)) {
+    console.log('Habits store not found, forcing database upgrade...');
+    // Close current connection
+    db.close();
+    dbPromise = null;
+    
+    // Force upgrade by opening with a higher version
+    const currentVersion = db.version;
+    db = await openDB(DB_NAME, currentVersion + 1, {
+      upgrade(database) {
+        if (!database.objectStoreNames.contains(HABITS_STORE)) {
+          const habitsStore = database.createObjectStore(HABITS_STORE, { keyPath: 'id' });
+          habitsStore.createIndex('date', 'date', { unique: true });
+          habitsStore.createIndex('year', 'year');
+          console.log('Created habits store via forced upgrade');
+        }
+      },
+    });
+    
+    // Update the cached promise
+    dbPromise = Promise.resolve(db);
+  }
+  
+  return db;
+}
+
+/**
+ * Get all habit entries
+ */
+export async function getAllHabits() {
+  const db = await ensureHabitsStore();
+  return db.getAll(HABITS_STORE);
+}
+
+/**
+ * Get habit entries for a specific year
+ */
+export async function getHabitsByYear(year) {
+  const db = await ensureHabitsStore();
+  const allHabits = await db.getAll(HABITS_STORE);
+  return allHabits.filter(h => h.year === year);
+}
+
+/**
+ * Get a habit entry by date string (YYYY-MM-DD format)
+ */
+export async function getHabitByDate(dateStr) {
+  const db = await ensureHabitsStore();
+  const tx = db.transaction(HABITS_STORE, 'readonly');
+  const index = tx.store.index('date');
+  return index.get(dateStr);
+}
+
+/**
+ * Create or update a habit entry for a specific date
+ */
+export async function upsertHabit(habitData) {
+  const db = await ensureHabitsStore();
+  const dateStr = habitData.date; // Expected format: YYYY-MM-DD
+  const year = parseInt(dateStr.split('-')[0]);
+  
+  // Check if entry exists for this date
+  const existing = await getHabitByDate(dateStr);
+  
+  if (existing) {
+    // Update existing
+    const updated = {
+      ...existing,
+      ...habitData,
+      year,
+      updatedAt: new Date().toISOString(),
+    };
+    await db.put(HABITS_STORE, updated);
+    return updated;
+  } else {
+    // Create new
+    const newEntry = {
+      id: crypto.randomUUID(),
+      ...habitData,
+      year,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await db.add(HABITS_STORE, newEntry);
+    return newEntry;
+  }
+}
+
+/**
+ * Delete a habit entry
+ */
+export async function deleteHabit(id) {
+  const db = await ensureHabitsStore();
+  await db.delete(HABITS_STORE, id);
+  return id;
+}
+
+/**
+ * Get habit statistics for a year
+ */
+export async function getHabitStats(year) {
+  const habits = await getHabitsByYear(year);
+  
+  if (habits.length === 0) {
+    return {
+      count: 0,
+      average: 0,
+      best: 0,
+      worst: 0,
+      streak: 0,
+    };
+  }
+  
+  const scores = habits.map(h => h.score).filter(s => s !== undefined && s !== null);
+  const sum = scores.reduce((a, b) => a + b, 0);
+  
+  return {
+    count: scores.length,
+    average: scores.length > 0 ? (sum / scores.length).toFixed(1) : 0,
+    best: Math.max(...scores),
+    worst: Math.min(...scores),
+  };
 }
 

@@ -2,7 +2,8 @@ import { useState, useCallback } from 'react';
 import DailyTaskList from '../../components/DailyTaskList';
 import WeeklyTaskList from '../../components/WeeklyTaskList';
 import TaskModal from '../../components/TaskModal';
-import ViewToggle from '../../components/ViewToggle';
+import NavToggle from '../../components/NavToggle';
+import TodoViewToggle from '../../components/TodoViewToggle';
 import styles from './HomePage.module.css';
 
 function HomePage() {
@@ -33,24 +34,33 @@ function HomePage() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <h1 className={styles.title}>Let&apos;s Do It!</h1>
-          <ViewToggle isWeekly={isWeekly} onToggle={handleToggleView} />
+          <NavToggle />
         </div>
       </header>
 
       <main className={styles.main}>
-        {isWeekly ? (
-          <WeeklyTaskList
-            key={`weekly-${refreshKey}`}
-            onSelectTask={handleSelectTask}
-            selectedTask={selectedTask}
-          />
-        ) : (
-          <DailyTaskList
-            key={`daily-${refreshKey}`}
-            onSelectTask={handleSelectTask}
-            selectedTask={selectedTask}
-          />
-        )}
+        <div className={`${styles.todoContainer} ${isWeekly ? styles.weekly : ''}`}>
+          <div className={styles.todoHeader}>
+            <h2 className={styles.todoTitle}>To Do</h2>
+            <TodoViewToggle isWeekly={isWeekly} onToggle={handleToggleView} />
+          </div>
+          
+          {isWeekly ? (
+            <WeeklyTaskList
+              key={`weekly-${refreshKey}`}
+              onSelectTask={handleSelectTask}
+              selectedTask={selectedTask}
+              hideHeader
+            />
+          ) : (
+            <DailyTaskList
+              key={`daily-${refreshKey}`}
+              onSelectTask={handleSelectTask}
+              selectedTask={selectedTask}
+              hideHeader
+            />
+          )}
+        </div>
       </main>
 
       {selectedTask && (
@@ -65,4 +75,3 @@ function HomePage() {
 }
 
 export default HomePage;
-

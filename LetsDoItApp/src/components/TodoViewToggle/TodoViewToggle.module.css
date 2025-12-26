@@ -1,0 +1,31 @@
+.container {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.option {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+
+.option.active {
+  color: white;
+  background: var(--primary-color);
+  box-shadow: 0 1px 3px rgba(50, 163, 188, 0.3);
+}
+
