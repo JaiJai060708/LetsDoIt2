@@ -1,0 +1,520 @@
+.addTask {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  background: linear-gradient(to right, #f8fafb, #f1f5f9);
+  border-top: 1px solid #e5e7eb;
+}
+
+.addTask.compact {
+  padding: 10px 12px;
+  background: #f8fafb;
+  border-top: none;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.inputWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 25px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.addTask.compact .input {
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.button {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.addTask.compact .button {
+  padding: 8px 14px;
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+/* Selected Tags */
+.selectedTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.selectedTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid;
+}
+
+/* Tag Picker */
+.tagPickerWrapper {
+  position: relative;
+}
+
+.tagBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tagBtn:hover {
+  background: #f3f4f6;
+  border-color: var(--primary-color);
+}
+
+.tagBtn.hasSelection {
+  background: var(--primary-light);
+  border-color: var(--primary-color);
+}
+
+.addTask.compact .tagBtn {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+/* Tag Dropdown */
+.tagDropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  animation: dropUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes dropUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownHeader {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dropdownTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tagList {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.noTags {
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 20px 12px;
+  margin: 0;
+}
+
+/* Tag Row */
+.tagRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.tagRow:hover {
+  background: #f8fafc;
+}
+
+.tagRow:hover .tagActions {
+  opacity: 1;
+}
+
+.tagOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.tagOption input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.tagPreview {
+  display: inline-flex;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+/* Tag Actions */
+.tagActions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.editTagBtn,
+.deleteTagBtn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.editTagBtn {
+  color: #64748b;
+}
+
+.editTagBtn:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.deleteTagBtn {
+  color: #94a3b8;
+}
+
+.deleteTagBtn:hover {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+/* Delete Confirmation */
+.deleteConfirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.deleteMessage {
+  font-size: 13px;
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.deleteActions {
+  display: flex;
+  gap: 6px;
+}
+
+.cancelDeleteBtn,
+.confirmDeleteBtn {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelDeleteBtn {
+  color: #64748b;
+  background: #f1f5f9;
+  border: none;
+}
+
+.cancelDeleteBtn:hover {
+  background: #e2e8f0;
+}
+
+.confirmDeleteBtn {
+  color: white;
+  background: #dc2626;
+  border: none;
+}
+
+.confirmDeleteBtn:hover {
+  background: #b91c1c;
+}
+
+/* Edit Form */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 0;
+}
+
+.editInput {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.editInput:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Color Picker */
+.colorPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.colorBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.colorBtn:hover {
+  transform: scale(1.1);
+}
+
+.colorBtn.selected {
+  border-color: #1e293b;
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px white;
+}
+
+/* Edit/Create Actions */
+.editActions,
+.createActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cancelBtn,
+.saveBtn,
+.createBtn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelBtn {
+  color: #64748b;
+  background: #f1f5f9;
+  border: none;
+}
+
+.cancelBtn:hover {
+  background: #e2e8f0;
+}
+
+.saveBtn,
+.createBtn {
+  color: white;
+  background: var(--primary-color);
+  border: none;
+}
+
+.saveBtn:hover:not(:disabled),
+.createBtn:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.saveBtn:disabled,
+.createBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 12px;
+}
+
+/* Create Form */
+.createForm {
+  padding: 12px;
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+}
+
+.createInput {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  margin-bottom: 10px;
+  transition: all 0.15s ease;
+}
+
+.createInput:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.createInput::placeholder {
+  color: #94a3b8;
+}
+
+.createPreview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding-top: 10px;
+  border-top: 1px dashed #99f6e4;
+}
+
+.previewLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.previewTag {
+  display: inline-flex;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 12px;
+  border: 1px solid;
+}
+
+/* Add New Button */
+.addNewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.addNewBtn:hover {
+  background: var(--primary-light);
+}
+
+.addNewBtn svg {
+  transition: transform 0.15s ease;
+}
+
+.addNewBtn:hover svg {
+  transform: rotate(90deg);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .tagDropdown {
+    width: 280px;
+    right: -40px;
+  }
+
+  .tagActions {
+    opacity: 1;
+  }
+}

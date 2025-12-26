@@ -1,0 +1,163 @@
+.container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  height: calc(100vh - 180px);
+  min-height: 500px;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.navBtn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.monthTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0 12px;
+}
+
+.weekContainer {
+  flex: 1;
+  overflow: hidden;
+  padding: 16px;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e5e7eb;
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+  height: 100%;
+}
+
+.dayColumn {
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.dayColumn.past {
+  background: repeating-linear-gradient(
+    45deg,
+    #f3f4f6,
+    #f3f4f6 10px,
+    #e5e7eb 10px,
+    #e5e7eb 11px
+  );
+}
+
+.dayColumn.today {
+  background: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.dayHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dayColumn.today .dayHeader {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.dayName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dayColumn.past .dayName {
+  color: #9ca3af;
+}
+
+.dayNumber {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 2px;
+}
+
+.dayColumn.today .dayNumber {
+  color: var(--primary-color);
+}
+
+.dayColumn.past .dayNumber {
+  color: #9ca3af;
+}
+
+.dayContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.footer {
+  border-top: 1px solid #e5e7eb;
+}
+
