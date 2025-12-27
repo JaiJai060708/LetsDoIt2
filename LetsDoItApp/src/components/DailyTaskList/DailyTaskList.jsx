@@ -31,6 +31,8 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [expandStatesLoaded, setExpandStatesLoaded] = useState(false);
   const [showHappinessTask, setShowHappinessTask] = useState(false);
   const [tagDeadlines, setTagDeadlines] = useState({ today: [], tomorrow: [], overdue: [] });
+  const [isMobile, setIsMobile] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   // Load expand states from DB
   const loadExpandStates = useCallback(async () => {
@@ -127,6 +129,51 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     
     return () => window.removeEventListener('focus', handleFocus);
   }, [loadTasks, loadExpandStates, checkHappinessSurvey, loadTagDeadlines]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsKeyboardOpen(false);
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    let baselineHeight = viewport.height;
+    const threshold = 140;
+
+    const handleResize = () => {
+      const height = viewport.height;
+      const isOpen = baselineHeight - height > threshold;
+      setIsKeyboardOpen(isOpen);
+      if (!isOpen) {
+        baselineHeight = height;
+      }
+    };
+
+    const handleOrientationChange = () => {
+      baselineHeight = viewport.height;
+      handleResize();
+    };
+
+    viewport.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      viewport.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [isMobile]);
 
   const handleTaskCreated = () => {
     loadTasks();
@@ -336,7 +383,7 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isMobile && isKeyboardOpen ? styles.keyboardOpen : ''}`}>
       {!hideHeader && (
         <div className={styles.header}>
           <h2 className={styles.title}>To Do</h2>
@@ -399,7 +446,15 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
         )}
       </div>
 
-      <AddTask onTaskCreated={handleTaskCreated} />
+      <div className={styles.addTaskWrapper}>
+        {isMobile && isKeyboardOpen && (
+          <div className={styles.addTaskHeader}>
+            <span className={styles.addTaskTitle}>Add Task</span>
+            <span className={styles.addTaskSubtitle}>Focused input while the keyboard is up</span>
+          </div>
+        )}
+        <AddTask onTaskCreated={handleTaskCreated} />
+      </div>
     </div>
   );
 }
