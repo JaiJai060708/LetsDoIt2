@@ -3,7 +3,7 @@
   "name": "LetsDoIt - Task Manager",
   "version": "1.0.0",
   "description": "Quick access to your daily tasks and happiness tracking",
-  "permissions": ["storage"],
+  "permissions": ["storage", "tabs"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

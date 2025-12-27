@@ -106,7 +106,7 @@ function TaskModal({ task, onClose, onUpdate }) {
     setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
-  const handleNoteBlur = () => {
+  const handleExitEditingNote = () => {
     setIsEditingNote(false);
   };
 
@@ -185,14 +185,24 @@ function TaskModal({ task, onClose, onUpdate }) {
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>Notes</label>
+            <div className={styles.labelRow}>
+              <label className={styles.label}>Notes</label>
+              {isEditingNote && (
+                <button
+                  type="button"
+                  className={styles.doneEditingBtn}
+                  onClick={handleExitEditingNote}
+                >
+                  Done
+                </button>
+              )}
+            </div>
             {isEditingNote ? (
               <textarea
                 ref={textareaRef}
                 className={styles.textarea}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                onBlur={handleNoteBlur}
                 placeholder="Add notes..."
                 rows={6}
               />

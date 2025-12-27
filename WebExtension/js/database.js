@@ -647,11 +647,38 @@ export async function syncFromGoogleDrive() {
     throw new Error('No Google Drive share link configured');
   }
 
+  // Check if this is the first sync (never synced before)
+  const isFirstSync = !settings.lastSyncAt;
+
   const remoteData = await fetchFromGoogleDrive(settings.shareLink);
 
   const localModifiedAt = await getLocalDataModifiedAt();
   const remoteModifiedAt = remoteData.localModifiedAt || remoteData.syncedAt || remoteData.exportedAt;
 
+  // FIRST SYNC: Always pull from cloud, replacing local data (no push allowed)
+  if (isFirstSync) {
+    console.log('First sync detected - pulling from Google Drive and replacing local data...');
+    const importResult = await importAllData(remoteData, { preserveLocalTimestamp: true });
+
+    if (remoteModifiedAt) {
+      await setSetting('localDataModifiedAt', remoteModifiedAt);
+    }
+
+    await setGoogleDriveSyncSettings({
+      lastSyncAt: new Date().toISOString(),
+    });
+
+    return {
+      action: SYNC_RESULT.PULLED,
+      tasksImported: importResult.tasksImported,
+      habitsImported: importResult.habitsImported,
+      localTimestamp: localModifiedAt,
+      remoteTimestamp: remoteModifiedAt,
+      isFirstSync: true,
+    };
+  }
+
+  // Compare timestamps for subsequent syncs
   const localTime = localModifiedAt ? new Date(localModifiedAt).getTime() : 0;
   const remoteTime = remoteModifiedAt ? new Date(remoteModifiedAt).getTime() : 0;
 

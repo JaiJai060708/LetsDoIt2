@@ -68,6 +68,7 @@ let syncState = SYNC_STATE.DISABLED;
 let syncEnabled = false;
 let syncStatusMessage = '';
 let autoSyncEnabled = false;
+let pendingTaskNote = null; // Store URL when capturing page info
 
 // Auto-sync debounce
 const AUTO_SYNC_DEBOUNCE = 2000;
@@ -102,6 +103,7 @@ const happinessModal = document.getElementById('happinessModal');
 const syncContainer = document.getElementById('syncContainer');
 const syncBtn = document.getElementById('syncBtn');
 const syncTooltip = document.getElementById('syncTooltip');
+const capturePageBtn = document.getElementById('capturePageBtn');
 const happinessDateLabel = document.getElementById('happinessDateLabel');
 const scoresContainer = document.getElementById('scoresContainer');
 const scoreStep = document.getElementById('scoreStep');
@@ -635,14 +637,58 @@ async function handleAddTask() {
   await createTask({
     content,
     dueDate: new Date().toISOString(),
-    note: null,
+    note: pendingTaskNote,
     doneAt: null,
     tags: [],
   });
 
   newTaskInput.value = '';
+  pendingTaskNote = null;
+  updateCaptureButtonState();
   await loadTasks();
   renderSections();
+}
+
+// Get current tab info
+async function getCurrentTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab;
+}
+
+// Handle capture page info
+async function handleCapturePageInfo() {
+  // If already active, toggle off - clear everything
+  if (pendingTaskNote) {
+    newTaskInput.value = '';
+    pendingTaskNote = null;
+    updateCaptureButtonState();
+    return;
+  }
+  
+  try {
+    const tab = await getCurrentTab();
+    if (tab) {
+      // Set the task title to the page title
+      newTaskInput.value = tab.title || '';
+      // Store the URL as the pending note
+      pendingTaskNote = tab.url || null;
+      updateCaptureButtonState();
+      newTaskInput.focus();
+    }
+  } catch (error) {
+    console.error('Failed to capture page info:', error);
+  }
+}
+
+// Update capture button visual state
+function updateCaptureButtonState() {
+  if (pendingTaskNote) {
+    capturePageBtn.classList.add('active');
+    capturePageBtn.title = 'Page URL will be added to note';
+  } else {
+    capturePageBtn.classList.remove('active');
+    capturePageBtn.title = 'Add current page info';
+  }
 }
 
 // Setup event listeners
@@ -681,6 +727,17 @@ function setupEventListeners() {
   newTaskInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       handleAddTask();
+    }
+  });
+  
+  // Capture page info
+  capturePageBtn.addEventListener('click', handleCapturePageInfo);
+  
+  // Clear pending note when input is manually cleared
+  newTaskInput.addEventListener('input', () => {
+    if (newTaskInput.value === '' && pendingTaskNote) {
+      pendingTaskNote = null;
+      updateCaptureButtonState();
     }
   });
 

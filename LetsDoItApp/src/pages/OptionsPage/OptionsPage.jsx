@@ -175,7 +175,11 @@ function OptionsPage() {
         // Show appropriate message based on sync result
         switch (result.action) {
           case SYNC_RESULT.PULLED:
-            showToast(`Pulled ${result.tasksImported} tasks, ${result.habitsImported} habits from cloud`);
+            if (result.isFirstSync) {
+              showToast(`First sync complete! Imported ${result.tasksImported} tasks, ${result.habitsImported} habits from cloud`);
+            } else {
+              showToast(`Pulled ${result.tasksImported} tasks, ${result.habitsImported} habits from cloud`);
+            }
             break;
           case SYNC_RESULT.PUSHED:
             showToast('Data pushed to cloud successfully!');

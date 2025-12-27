@@ -804,6 +804,7 @@ export async function pushToGoogleDrive() {
 /**
  * Sync data with Google Drive
  * Compares local and remote timestamps and syncs accordingly:
+ * - FIRST SYNC (never synced before): Always pull from Google Drive, replacing local data
  * - If remote is newer: pull from Google Drive
  * - If local is newer: push to Google Drive
  * - If same: no action needed
@@ -815,6 +816,9 @@ export async function syncFromGoogleDrive() {
     throw new Error('No Google Drive share link configured');
   }
   
+  // Check if this is the first sync (never synced before)
+  const isFirstSync = !settings.lastSyncAt;
+  
   // Fetch remote data
   const remoteData = await fetchFromGoogleDrive(settings.shareLink);
   
@@ -822,7 +826,34 @@ export async function syncFromGoogleDrive() {
   const localModifiedAt = await getLocalDataModifiedAt();
   const remoteModifiedAt = remoteData.localModifiedAt || remoteData.syncedAt || remoteData.exportedAt;
   
-  // Compare timestamps
+  // FIRST SYNC: Always pull from cloud, replacing local data (no push allowed)
+  if (isFirstSync) {
+    console.log('First sync detected - pulling from Google Drive and replacing local data...');
+    // Use preserveLocalTimestamp: true so we can set it to remote timestamp ourselves
+    const importResult = await importAllData(remoteData, { preserveLocalTimestamp: true });
+    
+    // Set the local modified timestamp to match the remote
+    // This prevents immediate re-sync
+    if (remoteModifiedAt) {
+      await setSetting('localDataModifiedAt', remoteModifiedAt);
+    }
+    
+    // Update last sync timestamp (marks that first sync is complete)
+    await setGoogleDriveSyncSettings({
+      lastSyncAt: new Date().toISOString(),
+    });
+    
+    return {
+      action: SYNC_RESULT.PULLED,
+      tasksImported: importResult.tasksImported,
+      habitsImported: importResult.habitsImported,
+      localTimestamp: localModifiedAt,
+      remoteTimestamp: remoteModifiedAt,
+      isFirstSync: true,
+    };
+  }
+  
+  // Compare timestamps for subsequent syncs
   const localTime = localModifiedAt ? new Date(localModifiedAt).getTime() : 0;
   const remoteTime = remoteModifiedAt ? new Date(remoteModifiedAt).getTime() : 0;
   
