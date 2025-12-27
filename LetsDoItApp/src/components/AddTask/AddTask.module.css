@@ -2,13 +2,13 @@
   display: flex;
   gap: 10px;
   padding: 16px 20px;
-  background: linear-gradient(to right, #f8fafb, #f1f5f9);
-  border-top: 1px solid #e5e7eb;
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border-light);
 }
 
 .addTask.compact {
   padding: 10px 12px;
-  background: #f8fafb;
+  background: var(--bg-secondary);
   border-top: none;
   border-radius: 8px;
   margin-top: 8px;
@@ -25,11 +25,12 @@
   flex: 1;
   padding: 12px 16px;
   font-size: 14px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-medium);
   border-radius: 25px;
   outline: none;
   transition: all 0.2s ease;
-  background: white;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .input:focus {
@@ -38,7 +39,7 @@
 }
 
 .input::placeholder {
-  color: #9ca3af;
+  color: var(--input-placeholder);
 }
 
 .addTask.compact .input {
@@ -51,7 +52,7 @@
   padding: 12px 24px;
   font-size: 14px;
   font-weight: 600;
-  color: white;
+  color: var(--text-inverse);
   background: var(--primary-color);
   border: none;
   border-radius: 25px;
@@ -105,15 +106,15 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  background: white;
-  border: 1px solid #d1d5db;
+  background: var(--card-bg);
+  border: 1px solid var(--border-medium);
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .tagBtn:hover {
-  background: #f3f4f6;
+  background: var(--bg-tertiary);
   border-color: var(--primary-color);
 }
 
@@ -134,10 +135,10 @@
   bottom: calc(100% + 8px);
   right: 0;
   width: 320px;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
   border-radius: 14px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-lg);
   z-index: 100;
   animation: dropUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
@@ -156,13 +157,13 @@
 
 .dropdownHeader {
   padding: 14px 16px 10px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .dropdownTitle {
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -175,7 +176,7 @@
 
 .noTags {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-align: center;
   padding: 20px 12px;
   margin: 0;
@@ -192,7 +193,7 @@
 }
 
 .tagRow:hover {
-  background: #f8fafc;
+  background: var(--bg-hover);
 }
 
 .tagRow:hover .tagActions {
@@ -210,7 +211,7 @@
 .tagOption input[type="checkbox"] {
   width: 16px;
   height: 16px;
-  accent-color: var(--primary-color);
+  accent-color: var(--checkbox-accent);
   cursor: pointer;
 }
 
@@ -238,15 +239,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .editTagBtn {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .editTagBtn:hover {
@@ -256,13 +257,13 @@
 }
 
 .deleteTagBtn {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .deleteTagBtn:hover {
-  color: #dc2626;
-  border-color: #fecaca;
-  background: #fef2f2;
+  color: var(--error);
+  border-color: var(--error);
+  background: var(--error-light);
 }
 
 /* Delete Confirmation */
@@ -277,7 +278,7 @@
 .deleteMessage {
   font-size: 13px;
   font-weight: 500;
-  color: #dc2626;
+  color: var(--error);
 }
 
 .deleteActions {
@@ -296,23 +297,23 @@
 }
 
 .cancelDeleteBtn {
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
   border: none;
 }
 
 .cancelDeleteBtn:hover {
-  background: #e2e8f0;
+  background: var(--bg-active);
 }
 
 .confirmDeleteBtn {
   color: white;
-  background: #dc2626;
+  background: var(--error);
   border: none;
 }
 
 .confirmDeleteBtn:hover {
-  background: #b91c1c;
+  opacity: 0.9;
 }
 
 /* Edit Form */
@@ -329,9 +330,9 @@
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 500;
-  color: #1e293b;
-  background: white;
-  border: 1px solid #cbd5e1;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1px solid var(--border-medium);
   border-radius: 6px;
   outline: none;
   transition: all 0.15s ease;
@@ -363,9 +364,9 @@
 }
 
 .colorBtn.selected {
-  border-color: #1e293b;
+  border-color: var(--text-primary);
   transform: scale(1.05);
-  box-shadow: 0 0 0 2px white;
+  box-shadow: 0 0 0 2px var(--card-bg);
 }
 
 /* Edit/Create Actions */
@@ -389,13 +390,13 @@
 }
 
 .cancelBtn {
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
   border: none;
 }
 
 .cancelBtn:hover {
-  background: #e2e8f0;
+  background: var(--bg-active);
 }
 
 .saveBtn,
@@ -419,14 +420,14 @@
 /* Divider */
 .divider {
   height: 1px;
-  background: #e5e7eb;
+  background: var(--border-light);
   margin: 4px 12px;
 }
 
 /* Create Form */
 .createForm {
   padding: 12px;
-  background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+  background: var(--primary-light);
 }
 
 .createInput {
@@ -434,9 +435,9 @@
   padding: 10px 12px;
   font-size: 14px;
   font-weight: 500;
-  color: #1e293b;
-  background: white;
-  border: 1px solid #cbd5e1;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1px solid var(--border-medium);
   border-radius: 8px;
   outline: none;
   margin-bottom: 10px;
@@ -449,7 +450,7 @@
 }
 
 .createInput::placeholder {
-  color: #94a3b8;
+  color: var(--input-placeholder);
 }
 
 .createPreview {
@@ -458,13 +459,13 @@
   gap: 8px;
   margin: 12px 0;
   padding-top: 10px;
-  border-top: 1px dashed #99f6e4;
+  border-top: 1px dashed var(--border-medium);
 }
 
 .previewLabel {
   font-size: 11px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -515,7 +516,7 @@
     z-index: 10;
     gap: 8px;
     padding: 10px 12px;
-    background: linear-gradient(to right, #f8fafb, #f1f5f9);
+    background: var(--bg-tertiary);
     border-radius: 0 0 10px 10px;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
   }

@@ -1,7 +1,7 @@
 .container {
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -9,6 +9,7 @@
   height: calc(100vh - 180px);
   min-height: 500px;
   overflow: hidden;
+  border: 1px solid var(--card-border);
 }
 
 @media (max-width: 768px) {
@@ -34,7 +35,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .navigation {
@@ -63,7 +64,7 @@
 .monthTitle {
   font-size: 20px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin: 0 0 0 12px;
 }
 
@@ -131,13 +132,13 @@
   justify-content: center;
   height: 100%;
   gap: 12px;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid #e5e7eb;
+  border: 3px solid var(--border-light);
   border-top-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -173,19 +174,20 @@
 .dayColumn {
   display: flex;
   flex-direction: column;
-  background: #f9fafb;
+  background: var(--bg-secondary);
   border-radius: 12px;
   overflow: hidden;
   min-width: 0;
+  border: 1px solid var(--border-light);
 }
 
 .dayColumn.past {
   background: repeating-linear-gradient(
     45deg,
-    #f3f4f6,
-    #f3f4f6 10px,
-    #e5e7eb 10px,
-    #e5e7eb 11px
+    var(--bg-tertiary),
+    var(--bg-tertiary) 10px,
+    var(--border-light) 10px,
+    var(--border-light) 11px
   );
 }
 
@@ -199,8 +201,8 @@
   flex-direction: column;
   align-items: center;
   padding: 12px 8px;
-  background: rgba(255, 255, 255, 0.7);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--bg-hover);
+  border-bottom: 1px solid var(--border-light);
 }
 
 @media (max-width: 768px) {
@@ -236,7 +238,7 @@
 }
 
 .dayColumn.today .dayHeader {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .dayName {
@@ -248,13 +250,13 @@
 }
 
 .dayColumn.past .dayName {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .dayNumber {
   font-size: 18px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 
@@ -269,7 +271,7 @@
 }
 
 .dayColumn.past .dayNumber {
-  color: #9ca3af;
+  color: var(--text-muted);
 }
 
 .dayContent {
@@ -294,7 +296,7 @@
 }
 
 .footer {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-light);
 }
 
 @media (max-width: 768px) {
@@ -302,7 +304,7 @@
     position: sticky;
     bottom: 0;
     z-index: 10;
-    background: white;
+    background: var(--card-bg);
     border-radius: 0 0 10px 10px;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
   }
@@ -313,4 +315,3 @@
     border-radius: 0 0 8px 8px;
   }
 }
-

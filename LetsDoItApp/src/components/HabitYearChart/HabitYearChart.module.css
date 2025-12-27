@@ -47,9 +47,9 @@
   gap: 6px;
   margin-bottom: 24px;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-secondary);
   border-radius: var(--radius-md);
-  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-medium);
 }
 
 .legendLabel {
@@ -122,7 +122,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 0.5px solid rgba(128, 128, 128, 0.2);
+  border: 0.5px solid var(--border-light);
   border-radius: 0;
 }
 
@@ -130,13 +130,13 @@
   transform: scaleY(1.15);
   z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  border-color: rgba(0, 0, 0, 0.3);
+  border-color: var(--border-strong);
 }
 
 .dayNumber {
   font-size: 7px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.4);
+  color: var(--text-muted);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -146,11 +146,11 @@
 }
 
 .dayContainer.noData {
-  background: #e5e7eb;
+  background: var(--bg-secondary);
 }
 
 .dayContainer.noData:hover {
-  background: #d1d5db;
+  background: var(--bg-tertiary);
 }
 
 .dayContainer.today {
@@ -159,7 +159,7 @@
 }
 
 .dayContainer.future {
-  background: #f5f5f5;
+  background: var(--bg-secondary);
   cursor: not-allowed;
   opacity: 0.4;
 }
@@ -234,4 +234,3 @@
     height: 28px;
   }
 }
-

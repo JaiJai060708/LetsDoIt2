@@ -164,25 +164,25 @@ function HabitTracker({ headerAction }) {
           label="Entries"
           value={stats.count}
           icon="📊"
-          color="var(--primary-light)"
+          color="var(--stat-color-primary)"
         />
         <StatCard
           label="Average"
           value={stats.average || '—'}
           icon="📈"
-          color="#dbeafe"
+          color="var(--stat-color-blue)"
         />
         <StatCard
           label="Best Day"
           value={stats.best ? `${stats.best}/10` : '—'}
           icon="🌟"
-          color="#dcfce7"
+          color="var(--stat-color-green)"
         />
         <StatCard
           label="Current Streak"
           value={`${streak} day${streak !== 1 ? 's' : ''}`}
           icon="🔥"
-          color="#fef3c7"
+          color="var(--stat-color-amber)"
         />
       </div>
 

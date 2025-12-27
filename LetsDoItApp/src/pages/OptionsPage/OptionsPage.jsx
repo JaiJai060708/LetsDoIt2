@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavToggle, { SettingsButton } from '../../components/NavToggle';
 import Logo from '../../components/Logo';
+import { useTheme } from '../../context';
 import { 
   exportAllData, 
   importAllData, 
@@ -31,6 +32,9 @@ function OptionsPage() {
   const [toast, setToast] = useState(null);
   const [linkedApps, setLinkedApps] = useState(['calendar']);
   
+  // Use theme context
+  const { theme, setTheme } = useTheme();
+  
   // Google Drive sync state
   const [googleDriveLink, setGoogleDriveLink] = useState('');
   const [googleDriveWriteEndpoint, setGoogleDriveWriteEndpoint] = useState('');
@@ -45,7 +49,7 @@ function OptionsPage() {
 
   // Load Google Drive settings on mount
   useEffect(() => {
-    const loadSyncSettings = async () => {
+    const loadSettings = async () => {
       const googleDriveSettings = await getGoogleDriveSyncSettings();
       setGoogleDriveLink(googleDriveSettings.shareLink || '');
       setGoogleDriveWriteEndpoint(googleDriveSettings.writeEndpoint || '');
@@ -54,12 +58,18 @@ function OptionsPage() {
       setGoogleDriveLastSyncAt(googleDriveSettings.lastSyncAt || null);
       setShowAdvancedSync(!!googleDriveSettings.writeEndpoint);
     };
-    loadSyncSettings();
+    loadSettings();
   }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  // Theme handlers
+  const handleThemeChange = async (newTheme) => {
+    await setTheme(newTheme);
+    showToast(`Theme changed to ${newTheme === 'light' ? 'Day' : 'Night'} mode`);
   };
 
   const handleExport = async () => {
@@ -235,18 +245,18 @@ function OptionsPage() {
               Options
             </h1>
             <p className={styles.pageSubtitle}>
-              Manage your integrations and data
+              Manage your integrations, preferences, and data
             </p>
           </div>
 
-          {/* App Integrations Section */}
+          {/* Integration Section */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <div className={`${styles.sectionIcon} ${styles.link}`}>
                 🔗
               </div>
               <div className={styles.sectionTitleGroup}>
-                <h2 className={styles.sectionTitle}>Connected Apps</h2>
+                <h2 className={styles.sectionTitle}>Integrations</h2>
                 <p className={styles.sectionDescription}>
                   Link your favorite apps to sync tasks and stay organized
                 </p>
@@ -289,282 +299,322 @@ function OptionsPage() {
             </div>
           </section>
 
-          {/* Google Drive Sync Section */}
-          <section className={`${styles.section} ${styles.cloudSection}`}>
-            <div className={styles.cloudSectionHeader}>
-              <div className={styles.cloudBrandRow}>
-                <div className={styles.cloudLogo}>
-                  <svg viewBox="0 0 87.3 78" fill="none">
-                    <path d="M6.6 66.85L17.85 45.3l14.1 24.45a13.34 13.34 0 01-25.35-2.9z" fill="#0066DA"/>
-                    <path d="M43.65 66.85L29.55 42.4 43.65 18l14.1 24.4z" fill="#00AC47"/>
-                    <path d="M80.7 66.85L69.45 45.3l-14.1 24.45a13.34 13.34 0 0025.35-2.9z" fill="#EA4335"/>
-                    <path d="M43.65 18L29.55 42.4l-14.1-24.45a13.34 13.34 0 0128.2.05z" fill="#00832D"/>
-                    <path d="M43.65 18l14.1 24.4 14.1-24.45a13.34 13.34 0 00-28.2.05z" fill="#2684FC"/>
-                    <path d="M57.75 42.4L43.65 66.85h28.2a13.34 13.34 0 00-14.1-24.45z" fill="#FFBA00"/>
-                  </svg>
-                </div>
-                <div className={styles.cloudTitleArea}>
-                  <h2 className={styles.cloudTitle}>Google Drive</h2>
-                  <p className={styles.cloudSubtitle}>Cloud Backup & Sync</p>
-                </div>
-                {googleDriveEnabled && (
-                  <div className={styles.cloudStatusBadge}>
-                    <span className={styles.cloudStatusIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    </span>
-                    Connected
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.cloudContent}>
-              {!googleDriveEnabled || isEditingGoogleDriveLink ? (
-                <div className={styles.cloudSetup}>
-                  <div className={styles.cloudInstructionCard}>
-                    <div className={styles.cloudInstructionIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 16v-4M12 8h.01" />
-                      </svg>
-                    </div>
-                    <div className={styles.cloudInstructionText}>
-                      <p className={styles.cloudInstructionTitle}>How to connect</p>
-                      <ol className={styles.cloudInstructionSteps}>
-                        <li>Export your data and upload to Google Drive</li>
-                        <li>Right-click → Share → &quot;Anyone with the link&quot;</li>
-                        <li>Paste the share link below</li>
-                      </ol>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.cloudInputWrapper}>
-                    <div className={styles.cloudInputIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M7 10l5 5 5-5M12 15V3" />
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                      </svg>
-                    </div>
-                    <input
-                      type="url"
-                      placeholder="Paste your Google Drive share link (for reading)..."
-                      value={googleDriveLink}
-                      onChange={(e) => setGoogleDriveLink(e.target.value)}
-                      className={styles.cloudInput}
-                    />
-                  </div>
-
-                  {/* Advanced settings for two-way sync */}
-                  <button
-                    className={styles.cloudAdvancedToggle}
-                    onClick={() => setShowAdvancedSync(!showAdvancedSync)}
-                  >
-                    <svg 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2"
-                      className={showAdvancedSync ? styles.rotated : ''}
-                    >
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                    <span>Advanced: Two-way sync (push to cloud)</span>
-                  </button>
-
-                  {showAdvancedSync && (
-                    <div className={styles.cloudAdvancedPanel}>
-                      <div className={styles.cloudAdvancedHeader}>
-                        <p className={styles.cloudAdvancedNote}>
-                          To enable pushing data to Google Drive, you need to set up a Google Apps Script Web App.
-                        </p>
-                        <button 
-                          className={styles.cloudSetupGuideBtn}
-                          onClick={() => setShowSetupGuide(true)}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
-                          </svg>
-                          Setup Guide
-                        </button>
-                      </div>
-                      <div className={styles.cloudInputWrapper}>
-                        <div className={styles.cloudInputIcon}>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M17 8l-5-5-5 5M12 3v12" />
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                          </svg>
-                        </div>
-                        <input
-                          type="url"
-                          placeholder="Google Apps Script Web App URL (for writing)..."
-                          value={googleDriveWriteEndpoint}
-                          onChange={(e) => setGoogleDriveWriteEndpoint(e.target.value)}
-                          className={styles.cloudInput}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className={styles.cloudSetupActions}>
-                    <button
-                      className={styles.cloudConnectBtn}
-                      onClick={handleSaveGoogleDriveLink}
-                      disabled={!googleDriveLink && !googleDriveEnabled}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
-                      </svg>
-                      {googleDriveEnabled ? 'Update Connection' : 'Connect to Drive'}
-                    </button>
-                    {isEditingGoogleDriveLink && (
-                      <button
-                        className={styles.cloudCancelBtn}
-                        onClick={() => setIsEditingGoogleDriveLink(false)}
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.cloudConnected}>
-                  <div className={styles.cloudFileCard}>
-                    <div className={styles.cloudFileIcon}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                        <polyline points="14,2 14,8 20,8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <line x1="10" y1="9" x2="8" y2="9" />
-                      </svg>
-                    </div>
-                    <div className={styles.cloudFileInfo}>
-                      <p className={styles.cloudFileName}>backup.json</p>
-                      <p className={styles.cloudFileLink}>
-                        {googleDriveLink.length > 40 ? `${googleDriveLink.substring(0, 40)}...` : googleDriveLink}
-                      </p>
-                    </div>
-                    <button 
-                      className={styles.cloudEditBtn}
-                      onClick={() => setIsEditingGoogleDriveLink(true)}
-                      title="Edit link"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div className={styles.cloudSyncPanel}>
-                    <div className={styles.cloudSyncInfo}>
-                      <div className={styles.cloudSyncTimestamp}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12,6 12,12 16,14" />
-                        </svg>
-                        <span>Last synced: <strong>{formatLastSync(googleDriveLastSyncAt)}</strong></span>
-                      </div>
-                      
-                      <label className={styles.cloudAutoSync}>
-                        <input
-                          type="checkbox"
-                          checked={googleDriveAutoSync}
-                          onChange={handleToggleGoogleDriveAutoSync}
-                        />
-                        <span className={styles.cloudAutoSyncSlider}></span>
-                        <span className={styles.cloudAutoSyncLabel}>Auto-sync on app load</span>
-                      </label>
-                    </div>
-
-                    <button
-                      className={`${styles.cloudSyncBtn} ${isGoogleDriveSyncing ? styles.syncing : ''}`}
-                      onClick={handleGoogleDriveSync}
-                      disabled={isGoogleDriveSyncing}
-                    >
-                      <svg 
-                        className={styles.cloudSyncIcon} 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2"
-                      >
-                        <path d="M23 4v6h-6M1 20v-6h6" />
-                        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-                      </svg>
-                      <span>{isGoogleDriveSyncing ? 'Syncing...' : 'Sync Now'}</span>
-                    </button>
-                  </div>
-
-                  <button
-                    className={styles.cloudDisconnectBtn}
-                    onClick={handleDisconnectGoogleDrive}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10" />
-                    </svg>
-                    Disconnect
-                  </button>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Export Data Section */}
+          {/* Preferences Section */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <div className={`${styles.sectionIcon} ${styles.export}`}>
-                📤
+              <div className={`${styles.sectionIcon} ${styles.preference}`}>
+                🎨
               </div>
               <div className={styles.sectionTitleGroup}>
-                <h2 className={styles.sectionTitle}>Export & Import</h2>
+                <h2 className={styles.sectionTitle}>Preferences</h2>
                 <p className={styles.sectionDescription}>
-                  Backup your data or restore from a previous backup
+                  Customize the appearance of your app
                 </p>
               </div>
             </div>
 
-            <div className={styles.dataActions}>
-              <button className={`${styles.actionButton} ${styles.export}`} onClick={handleExport}>
-                <div className={`${styles.actionIcon} ${styles.export}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+            <div className={styles.themeSelector}>
+              <button 
+                className={`${styles.themeOption} ${theme === 'light' ? styles.active : ''}`}
+                onClick={() => handleThemeChange('light')}
+              >
+                <div className={`${styles.themePreview} ${styles.light}`}>
+                  <div className={styles.themePreviewHeader}></div>
+                </div>
+                <span className={styles.themeLabel}>☀️ Day Mode</span>
+                <div className={styles.themeCheckmark}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
                   </svg>
                 </div>
-                <div className={styles.actionContent}>
-                  <p className={styles.actionTitle}>Export Data</p>
-                  <p className={styles.actionDescription}>Download all your tasks and settings as a JSON file</p>
-                </div>
-                <svg className={styles.actionArrow} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
               </button>
 
-              <button className={`${styles.actionButton} ${styles.import}`} onClick={handleImportClick}>
-                <div className={`${styles.actionIcon} ${styles.import}`}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              <button 
+                className={`${styles.themeOption} ${theme === 'dark' ? styles.active : ''}`}
+                onClick={() => handleThemeChange('dark')}
+              >
+                <div className={`${styles.themePreview} ${styles.dark}`}>
+                  <div className={styles.themePreviewHeader}></div>
+                </div>
+                <span className={styles.themeLabel}>🌙 Night Mode</span>
+                <div className={styles.themeCheckmark}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
                   </svg>
                 </div>
-                <div className={styles.actionContent}>
-                  <p className={styles.actionTitle}>Import Data</p>
-                  <p className={styles.actionDescription}>Restore your data from a backup file</p>
-                </div>
-                <svg className={styles.actionArrow} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
               </button>
+            </div>
+          </section>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json"
-                onChange={handleFileChange}
-                className={styles.hiddenInput}
-              />
+          {/* Data Section */}
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <div className={`${styles.sectionIcon} ${styles.data}`}>
+                💾
+              </div>
+              <div className={styles.sectionTitleGroup}>
+                <h2 className={styles.sectionTitle}>Data Management</h2>
+                <p className={styles.sectionDescription}>
+                  Sync, backup, and manage your data
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.dataSection}>
+              {/* Google Drive Sync */}
+              <div className={styles.cloudCard}>
+                <div className={styles.cloudHeader}>
+                  <div className={styles.cloudLogo}>
+                    <svg viewBox="0 0 87.3 78" fill="none">
+                      <path d="M6.6 66.85L17.85 45.3l14.1 24.45a13.34 13.34 0 01-25.35-2.9z" fill="#0066DA"/>
+                      <path d="M43.65 66.85L29.55 42.4 43.65 18l14.1 24.4z" fill="#00AC47"/>
+                      <path d="M80.7 66.85L69.45 45.3l-14.1 24.45a13.34 13.34 0 0025.35-2.9z" fill="#EA4335"/>
+                      <path d="M43.65 18L29.55 42.4l-14.1-24.45a13.34 13.34 0 0128.2.05z" fill="#00832D"/>
+                      <path d="M43.65 18l14.1 24.4 14.1-24.45a13.34 13.34 0 00-28.2.05z" fill="#2684FC"/>
+                      <path d="M57.75 42.4L43.65 66.85h28.2a13.34 13.34 0 00-14.1-24.45z" fill="#FFBA00"/>
+                    </svg>
+                  </div>
+                  <div className={styles.cloudTitleArea}>
+                    <h3 className={styles.cloudTitle}>Google Drive</h3>
+                    <p className={styles.cloudSubtitle}>Cloud Backup & Sync</p>
+                  </div>
+                  {googleDriveEnabled && (
+                    <div className={styles.cloudStatusBadge}>
+                      <span className={styles.cloudStatusIcon}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      </span>
+                      Connected
+                    </div>
+                  )}
+                </div>
+
+                {!googleDriveEnabled || isEditingGoogleDriveLink ? (
+                  <div className={styles.cloudSetup}>
+                    <div className={styles.cloudInstructionCard}>
+                      <div className={styles.cloudInstructionIcon}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 16v-4M12 8h.01" />
+                        </svg>
+                      </div>
+                      <div className={styles.cloudInstructionText}>
+                        <p className={styles.cloudInstructionTitle}>How to connect</p>
+                        <ol className={styles.cloudInstructionSteps}>
+                          <li>Export your data and upload to Google Drive</li>
+                          <li>Right-click → Share → &quot;Anyone with the link&quot;</li>
+                          <li>Paste the share link below</li>
+                        </ol>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.cloudInputWrapper}>
+                      <div className={styles.cloudInputIcon}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M7 10l5 5 5-5M12 15V3" />
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        </svg>
+                      </div>
+                      <input
+                        type="url"
+                        placeholder="Paste your Google Drive share link (for reading)..."
+                        value={googleDriveLink}
+                        onChange={(e) => setGoogleDriveLink(e.target.value)}
+                        className={styles.cloudInput}
+                      />
+                    </div>
+
+                    {/* Advanced settings for two-way sync */}
+                    <button
+                      className={styles.cloudAdvancedToggle}
+                      onClick={() => setShowAdvancedSync(!showAdvancedSync)}
+                    >
+                      <svg 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2"
+                        className={showAdvancedSync ? styles.rotated : ''}
+                      >
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                      <span>Advanced: Two-way sync (push to cloud)</span>
+                    </button>
+
+                    {showAdvancedSync && (
+                      <div className={styles.cloudAdvancedPanel}>
+                        <div className={styles.cloudAdvancedHeader}>
+                          <p className={styles.cloudAdvancedNote}>
+                            To enable pushing data to Google Drive, you need to set up a Google Apps Script Web App.
+                          </p>
+                          <button 
+                            className={styles.cloudSetupGuideBtn}
+                            onClick={() => setShowSetupGuide(true)}
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+                            </svg>
+                            Setup Guide
+                          </button>
+                        </div>
+                        <div className={styles.cloudInputWrapper}>
+                          <div className={styles.cloudInputIcon}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M17 8l-5-5-5 5M12 3v12" />
+                              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                            </svg>
+                          </div>
+                          <input
+                            type="url"
+                            placeholder="Google Apps Script Web App URL (for writing)..."
+                            value={googleDriveWriteEndpoint}
+                            onChange={(e) => setGoogleDriveWriteEndpoint(e.target.value)}
+                            className={styles.cloudInput}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className={styles.cloudSetupActions}>
+                      <button
+                        className={styles.cloudConnectBtn}
+                        onClick={handleSaveGoogleDriveLink}
+                        disabled={!googleDriveLink && !googleDriveEnabled}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                        </svg>
+                        {googleDriveEnabled ? 'Update Connection' : 'Connect to Drive'}
+                      </button>
+                      {isEditingGoogleDriveLink && (
+                        <button
+                          className={styles.cloudCancelBtn}
+                          onClick={() => setIsEditingGoogleDriveLink(false)}
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.cloudConnected}>
+                    <div className={styles.cloudFileCard}>
+                      <div className={styles.cloudFileIcon}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                          <polyline points="14,2 14,8 20,8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <line x1="10" y1="9" x2="8" y2="9" />
+                        </svg>
+                      </div>
+                      <div className={styles.cloudFileInfo}>
+                        <p className={styles.cloudFileName}>backup.json</p>
+                        <p className={styles.cloudFileLink}>
+                          {googleDriveLink.length > 40 ? `${googleDriveLink.substring(0, 40)}...` : googleDriveLink}
+                        </p>
+                      </div>
+                      <button 
+                        className={styles.cloudEditBtn}
+                        onClick={() => setIsEditingGoogleDriveLink(true)}
+                        title="Edit link"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div className={styles.cloudSyncPanel}>
+                      <div className={styles.cloudSyncInfo}>
+                        <div className={styles.cloudSyncTimestamp}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12,6 12,12 16,14" />
+                          </svg>
+                          <span>Last synced: <strong>{formatLastSync(googleDriveLastSyncAt)}</strong></span>
+                        </div>
+                        
+                        <label className={styles.cloudAutoSync}>
+                          <input
+                            type="checkbox"
+                            checked={googleDriveAutoSync}
+                            onChange={handleToggleGoogleDriveAutoSync}
+                          />
+                          <span className={styles.cloudAutoSyncSlider}></span>
+                          <span className={styles.cloudAutoSyncLabel}>Auto-sync on app load</span>
+                        </label>
+                      </div>
+
+                      <button
+                        className={`${styles.cloudSyncBtn} ${isGoogleDriveSyncing ? styles.syncing : ''}`}
+                        onClick={handleGoogleDriveSync}
+                        disabled={isGoogleDriveSyncing}
+                      >
+                        <svg 
+                          className={styles.cloudSyncIcon} 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2"
+                        >
+                          <path d="M23 4v6h-6M1 20v-6h6" />
+                          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                        </svg>
+                        <span>{isGoogleDriveSyncing ? 'Syncing...' : 'Sync Now'}</span>
+                      </button>
+                    </div>
+
+                    <button
+                      className={styles.cloudDisconnectBtn}
+                      onClick={handleDisconnectGoogleDrive}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10" />
+                      </svg>
+                      Disconnect
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Export/Import Actions */}
+              <div className={styles.dataActions}>
+                <button className={`${styles.actionButton} ${styles.export}`} onClick={handleExport}>
+                  <div className={`${styles.actionIcon} ${styles.export}`}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                    </svg>
+                  </div>
+                  <div className={styles.actionContent}>
+                    <p className={styles.actionTitle}>Export Data</p>
+                    <p className={styles.actionDescription}>Download as JSON</p>
+                  </div>
+                </button>
+
+                <button className={`${styles.actionButton} ${styles.import}`} onClick={handleImportClick}>
+                  <div className={`${styles.actionIcon} ${styles.import}`}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                  </div>
+                  <div className={styles.actionContent}>
+                    <p className={styles.actionTitle}>Import Data</p>
+                    <p className={styles.actionDescription}>Restore from backup</p>
+                  </div>
+                </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileChange}
+                  className={styles.hiddenInput}
+                />
+              </div>
             </div>
           </section>
 
@@ -789,4 +839,3 @@ function doGet(e) {
 }
 
 export default OptionsPage;
-

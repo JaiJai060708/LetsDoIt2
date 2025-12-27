@@ -418,7 +418,7 @@ export async function exportAllData() {
   const habits = await db.getAll(HABITS_STORE);
   const localModifiedAt = await getLocalDataModifiedAt();
   
-  // Get all settings
+  // Get all user settings (excludes device-specific settings like googleDriveSync and theme)
   const settingsKeys = ['availableTags', 'sectionExpandStates'];
   const settings = {};
   for (const key of settingsKeys) {
@@ -443,8 +443,11 @@ export async function exportAllData() {
 /**
  * Import data from a backup file
  * Replaces all existing data with the imported data
+ * @param {object} importData - The data to import
+ * @param {object} options - Import options
+ * @param {boolean} options.preserveLocalTimestamp - If true, don't update localDataModifiedAt (used by sync)
  */
-export async function importAllData(importData) {
+export async function importAllData(importData, options = {}) {
   if (!importData || !importData.data) {
     throw new Error('Invalid import data format');
   }
@@ -470,9 +473,21 @@ export async function importAllData(importData) {
   }
   await tx2.done;
   
-  // Import settings
+  // Import settings (user preferences only, preserves device-specific settings like googleDriveSync)
   for (const [key, value] of Object.entries(settings)) {
     await setSetting(key, value);
+  }
+  
+  // Update the local data timestamp unless explicitly told not to
+  // This ensures sync operations work correctly after import
+  if (!options.preserveLocalTimestamp) {
+    // Use the timestamp from the imported data if available, otherwise use current time
+    const importedTimestamp = importData.localModifiedAt || importData.syncedAt || importData.exportedAt;
+    if (importedTimestamp) {
+      await setSetting('localDataModifiedAt', importedTimestamp);
+    } else {
+      await updateLocalDataTimestamp();
+    }
   }
   
   return {
@@ -786,7 +801,8 @@ export async function syncFromGoogleDrive() {
   // If remote is newer, pull
   if (remoteTime > localTime) {
     console.log('Remote data is newer, pulling from Google Drive...');
-    const importResult = await importAllData(remoteData);
+    // Use preserveLocalTimestamp: true so we can set it to remote timestamp ourselves
+    const importResult = await importAllData(remoteData, { preserveLocalTimestamp: true });
     
     // Set the local modified timestamp to match the remote
     // This prevents immediate re-sync
