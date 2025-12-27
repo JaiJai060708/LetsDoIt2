@@ -182,3 +182,37 @@
 .dateInput:focus {
   border-color: var(--primary-color);
 }
+
+.noteDisplay {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  min-height: 120px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  cursor: text;
+  white-space: pre-wrap;
+  word-break: break-word;
+  transition: all 0.15s ease;
+}
+
+.noteDisplay:hover {
+  border-color: var(--border-dark, #999);
+}
+
+.noteDisplay.noteEmpty {
+  color: var(--text-muted);
+}
+
+.noteLink {
+  color: #3b82f6;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.noteLink:hover {
+  text-decoration: underline;
+}

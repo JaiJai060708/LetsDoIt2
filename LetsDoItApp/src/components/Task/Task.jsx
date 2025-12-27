@@ -40,6 +40,14 @@ const isDeadlineSoon = (deadline) => {
   return date && isTomorrow(date);
 };
 
+// Extract first URL from text
+const extractUrl = (text) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/gi;
+  const match = text.match(urlRegex);
+  return match ? match[0] : null;
+};
+
 function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) {
   const [isHovered, setIsHovered] = useState(false);
   const [availableTags, setAvailableTags] = useState([]);
@@ -64,6 +72,7 @@ function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) 
   };
 
   const taskIsPast = task.dueDate && isPast(new Date(task.dueDate)) && !task.doneAt;
+  const noteUrl = extractUrl(task.note);
 
   return (
     <Draggable draggableId={task.id} index={index}>
@@ -114,7 +123,24 @@ function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) 
           </div>
           
           <div className={styles.right}>
-            {task.note && <span className={styles.noteIndicator} title="Has notes">📝</span>}
+            {noteUrl && (
+              <a
+                href={noteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.linkBtn}
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                title="Open in new tab"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
+            )}
             {isHovered && (
               <button
                 className={styles.deleteBtn}

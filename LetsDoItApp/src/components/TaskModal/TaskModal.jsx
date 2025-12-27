@@ -1,8 +1,35 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { updateTask, deleteTask } from '../../db/database';
 import { formatDateForInput } from '../../utils/dateUtils';
 import TagSelector from '../TagSelector';
 import styles from './TaskModal.module.css';
+
+// Render text with clickable links
+const renderTextWithLinks = (text) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/gi;
+  const parts = text.split(urlRegex);
+  
+  return parts.map((part, index) => {
+    if (urlRegex.test(part)) {
+      // Reset regex lastIndex since we're using global flag
+      urlRegex.lastIndex = 0;
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.noteLink}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
 
 function TaskModal({ task, onClose, onUpdate }) {
   const [content, setContent] = useState(task.content);
@@ -11,6 +38,8 @@ function TaskModal({ task, onClose, onUpdate }) {
   const [isSomeday, setIsSomeday] = useState(!task.dueDate);
   const [tags, setTags] = useState(task.tags || []);
   const [saveTimeout, setSaveTimeout] = useState(null);
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const textareaRef = useRef(null);
 
   // Auto-save functionality
   const saveChanges = useCallback(async () => {
@@ -70,6 +99,15 @@ function TaskModal({ task, onClose, onUpdate }) {
     if (!checked && !dueDate) {
       setDueDate(formatDateForInput(new Date()));
     }
+  };
+
+  const handleNoteClick = () => {
+    setIsEditingNote(true);
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  };
+
+  const handleNoteBlur = () => {
+    setIsEditingNote(false);
   };
 
   return (
@@ -148,13 +186,24 @@ function TaskModal({ task, onClose, onUpdate }) {
 
           <div className={styles.field}>
             <label className={styles.label}>Notes</label>
-            <textarea
-              className={styles.textarea}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Add notes..."
-              rows={6}
-            />
+            {isEditingNote ? (
+              <textarea
+                ref={textareaRef}
+                className={styles.textarea}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                onBlur={handleNoteBlur}
+                placeholder="Add notes..."
+                rows={6}
+              />
+            ) : (
+              <div
+                className={`${styles.noteDisplay} ${!note ? styles.noteEmpty : ''}`}
+                onClick={handleNoteClick}
+              >
+                {note ? renderTextWithLinks(note) : 'Add notes...'}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -366,6 +366,14 @@ function formatDeadline(deadline) {
   return formatDate(date);
 }
 
+// Extract first URL from text
+function extractUrl(text) {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/gi;
+  const match = text.match(urlRegex);
+  return match ? match[0] : null;
+}
+
 // Create task element
 function createTaskElement(task) {
   const taskEl = document.createElement('div');
@@ -423,12 +431,22 @@ function createTaskElement(task) {
   const rightEl = document.createElement('div');
   rightEl.className = 'task-right';
 
-  if (task.note) {
-    const noteIndicator = document.createElement('span');
-    noteIndicator.className = 'note-indicator';
-    noteIndicator.textContent = '📝';
-    noteIndicator.title = 'Has notes';
-    rightEl.appendChild(noteIndicator);
+  // Link button if note contains a URL
+  const noteUrl = extractUrl(task.note);
+  if (noteUrl) {
+    const linkBtn = document.createElement('a');
+    linkBtn.href = noteUrl;
+    linkBtn.target = '_blank';
+    linkBtn.rel = 'noopener noreferrer';
+    linkBtn.className = 'link-btn';
+    linkBtn.title = 'Open in new tab';
+    linkBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>`;
+    linkBtn.addEventListener('click', (e) => e.stopPropagation());
+    rightEl.appendChild(linkBtn);
   }
 
   const deleteBtn = document.createElement('button');
