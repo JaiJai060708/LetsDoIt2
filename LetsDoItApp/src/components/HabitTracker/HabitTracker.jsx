@@ -5,7 +5,6 @@ import HabitSurvey from '../HabitSurvey';
 import { getHabitsByYear, upsertHabit, getHabitStats } from '../../db/database';
 import {
   scoreToColor,
-  scoreToEmoji,
   scoreToLabel,
   getTodayKey,
   formatDateKey,
@@ -38,7 +37,7 @@ function RecentEntry({ habit }) {
       <div className={styles.recentInfo}>
         <span className={styles.recentDate}>{format(date, 'EEE, MMM d')}</span>
         <span className={styles.recentScore}>
-          {scoreToEmoji(habit.score)} {scoreToLabel(habit.score)}
+          {scoreToLabel(habit.score)}
         </span>
       </div>
       {habit.note && <span className={styles.recentNote}>📝</span>}
@@ -142,7 +141,7 @@ function HabitTracker({ headerAction }) {
                 style={{ backgroundColor: scoreToColor(todayEntry.score) }}
                 onClick={handleQuickLog}
               >
-                {scoreToEmoji(todayEntry.score)} {scoreToLabel(todayEntry.score)}
+                {scoreToLabel(todayEntry.score)}
               </div>
             </div>
           ) : (

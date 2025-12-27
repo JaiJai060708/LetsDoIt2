@@ -3,7 +3,6 @@ import { format, getDate } from 'date-fns';
 import {
   scoreToColor,
   scoreToLabel,
-  scoreToEmoji,
   MONTHS,
   getDaysInMonth,
   formatDateKey,
@@ -51,7 +50,7 @@ function MonthChart({ month, monthIndex, year, habitsMap, selectedRange, onDayCl
               onMouseLeave={() => onDayHover(null, null)}
               title={
                 hasData
-                  ? `${format(day, 'EEEE, MMMM d')}\n${scoreToEmoji(score)} ${scoreToLabel(score)} (${score}/10)`
+                  ? `${format(day, 'EEEE, MMMM d')}\n${scoreToLabel(score)} (${score}/10)`
                   : isFuture
                   ? 'Future date'
                   : `${format(day, 'EEEE, MMMM d')}\nNo entry - click to add`
