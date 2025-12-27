@@ -24,9 +24,11 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0].color);
+  const [newTagDeadline, setNewTagDeadline] = useState('');
   const [editingTag, setEditingTag] = useState(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+  const [editDeadline, setEditDeadline] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   
   const dropdownRef = useRef(null);
@@ -88,12 +90,14 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
     const newTag = await addTag({
       name: trimmedName,
       color: newTagColor,
+      deadline: newTagDeadline || null,
     });
 
     setAvailableTags([...availableTags, newTag]);
     onChange([...selectedTags, newTag.id]);
     setNewTagName('');
     setNewTagColor(TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)].color);
+    setNewTagDeadline('');
     setIsCreating(false);
   };
 
@@ -103,6 +107,7 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
     setEditingTag(tag.id);
     setEditName(tag.name);
     setEditColor(tag.color);
+    setEditDeadline(tag.deadline || '');
     setDeleteConfirmId(null);
   };
 
@@ -113,6 +118,7 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
     await updateTag(editingTag, {
       name: editName.trim(),
       color: editColor,
+      deadline: editDeadline || null,
     });
     
     await loadTags();
@@ -135,8 +141,14 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
       e.preventDefault();
       action();
     } else if (e.key === 'Escape') {
-      if (isCreating) setIsCreating(false);
-      if (editingTag) setEditingTag(null);
+      if (isCreating) {
+        setIsCreating(false);
+        setNewTagDeadline('');
+      }
+      if (editingTag) {
+        setEditingTag(null);
+        setEditDeadline('');
+      }
     }
   };
 
@@ -228,6 +240,24 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
                           />
                         ))}
                       </div>
+                      <div className={styles.deadlineField}>
+                        <label className={styles.deadlineLabel}>📅</label>
+                        <input
+                          type="date"
+                          className={styles.deadlineInput}
+                          value={editDeadline}
+                          onChange={(e) => setEditDeadline(e.target.value)}
+                        />
+                        {editDeadline && (
+                          <button
+                            type="button"
+                            className={styles.clearDeadlineBtn}
+                            onClick={() => setEditDeadline('')}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
                       <div className={styles.editActions}>
                         <button
                           type="button"
@@ -318,6 +348,24 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
                   />
                 ))}
               </div>
+              <div className={styles.deadlineField}>
+                <label className={styles.deadlineLabel}>📅 Deadline:</label>
+                <input
+                  type="date"
+                  className={styles.deadlineInput}
+                  value={newTagDeadline}
+                  onChange={(e) => setNewTagDeadline(e.target.value)}
+                />
+                {newTagDeadline && (
+                  <button
+                    type="button"
+                    className={styles.clearDeadlineBtn}
+                    onClick={() => setNewTagDeadline('')}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
               <div className={styles.createPreview}>
                 <span className={styles.previewLabel}>Preview:</span>
                 <span
@@ -330,6 +378,14 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
                 >
                   {newTagName || 'Tag name'}
                 </span>
+                {newTagDeadline && (
+                  <span className={styles.previewDeadline}>
+                    📅 {(() => {
+                      const [y, m, d] = newTagDeadline.split('-').map(Number);
+                      return new Date(y, m - 1, d).toLocaleDateString();
+                    })()}
+                  </span>
+                )}
               </div>
               <div className={styles.createActions}>
                 <button type="button" className={styles.cancelBtn} onClick={() => setIsCreating(false)}>

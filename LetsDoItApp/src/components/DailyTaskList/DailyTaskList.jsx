@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { addDays } from 'date-fns';
-import { getAllTasks, updateTask, getSectionExpandStates, setSectionExpandState, getHabitByDate } from '../../db/database';
-import { categorizeDailyTasks, sortTasks, getTodayStart } from '../../utils/dateUtils';
+import { getAllTasks, updateTask, getSectionExpandStates, setSectionExpandState, getHabitByDate, getAvailableTags } from '../../db/database';
+import { categorizeDailyTasks, sortTasks, getTodayStart, isToday, isTomorrow, isPast } from '../../utils/dateUtils';
 import { getTodayKey } from '../../utils/habitUtils';
 import TaskList from '../TaskList';
 import AddTask from '../AddTask';
@@ -30,6 +30,7 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [expandStates, setExpandStates] = useState({});
   const [expandStatesLoaded, setExpandStatesLoaded] = useState(false);
   const [showHappinessTask, setShowHappinessTask] = useState(false);
+  const [tagDeadlines, setTagDeadlines] = useState({ today: [], tomorrow: [], overdue: [] });
 
   // Load expand states from DB
   const loadExpandStates = useCallback(async () => {
@@ -52,6 +53,42 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     } catch (error) {
       console.error('Failed to check happiness survey:', error);
       setShowHappinessTask(true); // Show task if check fails
+    }
+  }, []);
+
+  // Parse date string to local date (avoids timezone issues with YYYY-MM-DD format)
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (dateStr.includes('T')) return new Date(dateStr);
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  // Load tag deadlines
+  const loadTagDeadlines = useCallback(async () => {
+    try {
+      const tags = await getAvailableTags();
+      const today = [];
+      const tomorrow = [];
+      const overdue = [];
+
+      tags.forEach((tag) => {
+        if (!tag.deadline) return;
+        const deadlineDate = parseLocalDate(tag.deadline);
+        if (!deadlineDate) return;
+        
+        if (isPast(deadlineDate) && !isToday(deadlineDate)) {
+          overdue.push(tag);
+        } else if (isToday(deadlineDate)) {
+          today.push(tag);
+        } else if (isTomorrow(deadlineDate)) {
+          tomorrow.push(tag);
+        }
+      });
+
+      setTagDeadlines({ today, tomorrow, overdue });
+    } catch (error) {
+      console.error('Failed to load tag deadlines:', error);
     }
   }, []);
 
@@ -78,16 +115,18 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     loadTasks();
     loadExpandStates();
     checkHappinessSurvey();
+    loadTagDeadlines();
     
     // Reload when window regains focus
     const handleFocus = () => {
       loadTasks();
       checkHappinessSurvey();
+      loadTagDeadlines();
     };
     window.addEventListener('focus', handleFocus);
     
     return () => window.removeEventListener('focus', handleFocus);
-  }, [loadTasks, loadExpandStates, checkHappinessSurvey]);
+  }, [loadTasks, loadExpandStates, checkHappinessSurvey, loadTagDeadlines]);
 
   const handleTaskCreated = () => {
     loadTasks();
@@ -305,6 +344,48 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
       )}
 
       <div className={styles.content}>
+        {/* Tag Deadline Banners */}
+        {(tagDeadlines.overdue.length > 0 || tagDeadlines.today.length > 0 || tagDeadlines.tomorrow.length > 0) && (
+          <div className={styles.deadlineBanners}>
+            {tagDeadlines.overdue.length > 0 && (
+              <div className={`${styles.deadlineBanner} ${styles.overdueBanner}`}>
+                <span className={styles.deadlineBannerIcon}>⚠️</span>
+                <span className={styles.deadlineBannerText}>
+                  Overdue: {tagDeadlines.overdue.map((t, i) => (
+                    <span key={t.id} className={styles.deadlineTag} style={{ color: t.color }}>
+                      {t.name}{i < tagDeadlines.overdue.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+            {tagDeadlines.today.length > 0 && (
+              <div className={`${styles.deadlineBanner} ${styles.todayBanner}`}>
+                <span className={styles.deadlineBannerIcon}>🔥</span>
+                <span className={styles.deadlineBannerText}>
+                  Due Today: {tagDeadlines.today.map((t, i) => (
+                    <span key={t.id} className={styles.deadlineTag} style={{ color: t.color }}>
+                      {t.name}{i < tagDeadlines.today.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+            {tagDeadlines.tomorrow.length > 0 && (
+              <div className={`${styles.deadlineBanner} ${styles.tomorrowBanner}`}>
+                <span className={styles.deadlineBannerIcon}>📅</span>
+                <span className={styles.deadlineBannerText}>
+                  Due Tomorrow: {tagDeadlines.tomorrow.map((t, i) => (
+                    <span key={t.id} className={styles.deadlineTag} style={{ color: t.color }}>
+                      {t.name}{i < tagDeadlines.tomorrow.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {hasNoTasks ? (
           <div className={styles.empty}>
             <div className={styles.emptyIcon}>📋</div>

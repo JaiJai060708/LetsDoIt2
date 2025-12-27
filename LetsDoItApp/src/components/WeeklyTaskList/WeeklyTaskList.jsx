@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { addDays } from 'date-fns';
-import { getAllTasks, updateTask } from '../../db/database';
+import { addDays, isSameDay } from 'date-fns';
+import { getAllTasks, updateTask, getAvailableTags } from '../../db/database';
 import {
   getWeekStart,
   getWeekDayDate,
@@ -23,8 +23,44 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weekTasks, setWeekTasks] = useState(Array(7).fill([]));
   const [isLoading, setIsLoading] = useState(true);
+  const [tagDeadlinesByDay, setTagDeadlinesByDay] = useState(Array(7).fill([]));
 
   const weekStart = getWeekStart(currentDate);
+
+  // Parse date string to local date (avoids timezone issues with YYYY-MM-DD format)
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    if (dateStr.includes('T')) return new Date(dateStr);
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  // Load tag deadlines for the current week
+  const loadTagDeadlines = useCallback(async () => {
+    try {
+      const tags = await getAvailableTags();
+      const deadlinesByDay = Array(7).fill(null).map(() => []);
+
+      tags.forEach((tag) => {
+        if (!tag.deadline) return;
+        const deadlineDate = parseLocalDate(tag.deadline);
+        if (!deadlineDate) return;
+        
+        // Check each day of the week
+        for (let i = 0; i < 7; i++) {
+          const dayDate = getWeekDayDate(currentDate, i);
+          if (isSameDay(deadlineDate, dayDate)) {
+            deadlinesByDay[i].push(tag);
+            break;
+          }
+        }
+      });
+
+      setTagDeadlinesByDay(deadlinesByDay);
+    } catch (error) {
+      console.error('Failed to load tag deadlines:', error);
+    }
+  }, [currentDate]);
 
   const loadTasks = useCallback(async () => {
     try {
@@ -40,12 +76,16 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
 
   useEffect(() => {
     loadTasks();
+    loadTagDeadlines();
 
-    const handleFocus = () => loadTasks();
+    const handleFocus = () => {
+      loadTasks();
+      loadTagDeadlines();
+    };
     window.addEventListener('focus', handleFocus);
 
     return () => window.removeEventListener('focus', handleFocus);
-  }, [loadTasks]);
+  }, [loadTasks, loadTagDeadlines]);
 
   const handlePrevWeek = () => {
     setCurrentDate(shiftWeek(currentDate, -1));
@@ -159,6 +199,7 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
                 const dayDate = getWeekDayDate(currentDate, index);
                 const dayIsPast = isPast(dayDate) && !isToday(dayDate);
                 const dayIsToday = isToday(dayDate);
+                const dayDeadlines = tagDeadlinesByDay[index] || [];
 
                 return (
                   <div
@@ -169,6 +210,25 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
                       <span className={styles.dayName}>{dayName}</span>
                       <span className={styles.dayNumber}>{dayDate.getDate()}</span>
                     </div>
+                    {dayDeadlines.length > 0 && (
+                      <div className={styles.dayDeadlines}>
+                        {dayDeadlines.map((tag) => (
+                          <div
+                            key={tag.id}
+                            className={`${styles.deadlineChip} ${dayIsPast ? styles.overdue : ''} ${dayIsToday ? styles.dueToday : ''}`}
+                            style={{ 
+                              backgroundColor: tag.color + '20', 
+                              borderColor: tag.color,
+                              color: tag.color 
+                            }}
+                            title={`${tag.name} deadline`}
+                          >
+                            <span className={styles.deadlineIcon}>🎯</span>
+                            <span className={styles.deadlineName}>{tag.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className={styles.dayContent}>
                       <TaskList
                         droppableId={DAY_IDS[index]}

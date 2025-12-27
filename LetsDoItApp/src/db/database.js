@@ -1,7 +1,7 @@
 import { openDB, deleteDB } from 'idb';
 
 const DB_NAME = 'LetsDoItDB';
-const DB_VERSION = 5;
+const DB_VERSION = 9;
 const TASKS_STORE = 'tasks';
 const SETTINGS_STORE = 'settings';
 const HABITS_STORE = 'habits';
@@ -236,6 +236,7 @@ export async function addTag(tag) {
     id: tag.id || crypto.randomUUID(),
     name: tag.name,
     color: tag.color || '#6b7280',
+    deadline: tag.deadline || null, // ISO date string or null
   };
   tags.push(newTag);
   await setSetting('availableTags', tags);
@@ -249,7 +250,12 @@ export async function updateTag(tagId, updates) {
   const tags = await getAvailableTags();
   const index = tags.findIndex(t => t.id === tagId);
   if (index !== -1) {
-    tags[index] = { ...tags[index], ...updates };
+    // Explicitly handle deadline to allow setting it to null
+    const updatedTag = { ...tags[index], ...updates };
+    if ('deadline' in updates) {
+      updatedTag.deadline = updates.deadline;
+    }
+    tags[index] = updatedTag;
     await setSetting('availableTags', tags);
   }
   return tags;

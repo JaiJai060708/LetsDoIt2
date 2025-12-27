@@ -23,22 +23,11 @@ const isMobileDevice = () => {
          (window.innerWidth <= 768 && 'ontouchstart' in window);
 };
 
-// Sample app integrations
-const AVAILABLE_APPS = [
-  { id: 'calendar', name: 'Calendar', icon: '📅', status: 'linked' },
-  { id: 'reminders', name: 'Reminders', icon: '⏰', status: 'available' },
-  { id: 'notion', name: 'Notion', icon: '📝', status: 'available' },
-  { id: 'slack', name: 'Slack', icon: '💬', status: 'available' },
-  { id: 'trello', name: 'Trello', icon: '📋', status: 'available' },
-  { id: 'github', name: 'GitHub', icon: '🐙', status: 'available' },
-];
-
 function OptionsPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [toast, setToast] = useState(null);
-  const [linkedApps, setLinkedApps] = useState(['calendar']);
   
   // Use theme context
   const { theme, setTheme } = useTheme();
@@ -147,17 +136,6 @@ function OptionsPage() {
       console.error('Delete failed:', error);
       showToast('Failed to delete data', 'error');
     }
-  };
-
-  const toggleAppLink = (appId) => {
-    setLinkedApps(prev => 
-      prev.includes(appId) 
-        ? prev.filter(id => id !== appId)
-        : [...prev, appId]
-    );
-    const app = AVAILABLE_APPS.find(a => a.id === appId);
-    const isNowLinked = !linkedApps.includes(appId);
-    showToast(`${app?.name} ${isNowLinked ? 'linked' : 'unlinked'} successfully`);
   };
 
   // Google Drive sync handlers
@@ -359,56 +337,6 @@ function OptionsPage() {
               Manage your integrations, preferences, and data
             </p>
           </div>
-
-          {/* Integration Section */}
-          <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <div className={`${styles.sectionIcon} ${styles.link}`}>
-                🔗
-              </div>
-              <div className={styles.sectionTitleGroup}>
-                <h2 className={styles.sectionTitle}>Integrations</h2>
-                <p className={styles.sectionDescription}>
-                  Link your favorite apps to sync tasks and stay organized
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.appLinksGrid}>
-              {AVAILABLE_APPS.map((app) => {
-                const isLinked = linkedApps.includes(app.id);
-                return (
-                  <button
-                    key={app.id}
-                    className={`${styles.appCard} ${isLinked ? styles.linked : ''}`}
-                    onClick={() => toggleAppLink(app.id)}
-                  >
-                    <div className={`${styles.appIconWrapper} ${styles[app.id]}`}>
-                      {app.icon}
-                      {isLinked && (
-                        <div className={styles.linkedBadge}>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <path d="M20 6L9 17l-5-5" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    <p className={styles.appName}>{app.name}</p>
-                    <p className={`${styles.appStatus} ${isLinked ? styles.linked : ''}`}>
-                      {isLinked ? 'Connected' : 'Click to connect'}
-                    </p>
-                  </button>
-                );
-              })}
-
-              <button className={styles.addAppButton}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                <span>More apps soon</span>
-              </button>
-            </div>
-          </section>
 
           {/* Preferences Section */}
           <section className={styles.section}>

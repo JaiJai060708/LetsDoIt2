@@ -327,6 +327,65 @@
   box-shadow: 0 0 0 2px white;
 }
 
+/* Deadline Field */
+.deadlineField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.deadlineLabel {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.deadlineInput {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #1e293b;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.15s ease;
+  max-width: 140px;
+}
+
+.deadlineInput:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.clearDeadlineBtn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.clearDeadlineBtn:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.previewDeadline {
+  font-size: 11px;
+  color: #64748b;
+  margin-left: 6px;
+}
+
 /* Create Form */
 .createForm {
   padding: 12px;

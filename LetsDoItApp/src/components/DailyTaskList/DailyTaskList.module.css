@@ -237,3 +237,77 @@
   color: var(--text-muted);
   margin: 0;
 }
+
+/* Tag Deadline Banners */
+.deadlineBanners {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.deadlineBanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.deadlineBannerIcon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.deadlineBannerText {
+  flex: 1;
+  color: inherit;
+}
+
+.deadlineTag {
+  font-weight: 600;
+}
+
+.overdueBanner {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.todayBanner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  color: #b45309;
+}
+
+.tomorrowBanner {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
+  color: #1d4ed8;
+}
+
+@media (max-width: 480px) {
+  .deadlineBanners {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  
+  .deadlineBanner {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}

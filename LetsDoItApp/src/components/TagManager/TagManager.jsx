@@ -23,9 +23,11 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+  const [editDeadline, setEditDeadline] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0].color);
+  const [newTagDeadline, setNewTagDeadline] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const editInputRef = useRef(null);
   const newInputRef = useRef(null);
@@ -71,6 +73,7 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
     setEditingId(tag.id);
     setEditName(tag.name);
     setEditColor(tag.color);
+    setEditDeadline(tag.deadline || '');
     setDeleteConfirmId(null);
   };
 
@@ -80,6 +83,7 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
     await updateTag(editingId, {
       name: editName.trim(),
       color: editColor,
+      deadline: editDeadline || null,
     });
     
     setEditingId(null);
@@ -91,6 +95,7 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
     setEditingId(null);
     setEditName('');
     setEditColor('');
+    setEditDeadline('');
   };
 
   const handleDeleteClick = (tagId) => {
@@ -115,10 +120,12 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
     await addTag({
       name: newTagName.trim(),
       color: newTagColor,
+      deadline: newTagDeadline || null,
     });
     
     setNewTagName('');
     setNewTagColor(TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)].color);
+    setNewTagDeadline('');
     setIsAdding(false);
     await loadTags();
     onTagsChanged?.();
@@ -202,6 +209,33 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
                           />
                         ))}
                       </div>
+                      <div className={styles.deadlineField}>
+                        <label className={styles.deadlineLabel}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                          </svg>
+                          Deadline
+                        </label>
+                        <input
+                          type="date"
+                          className={styles.deadlineInput}
+                          value={editDeadline}
+                          onChange={(e) => setEditDeadline(e.target.value)}
+                        />
+                        {editDeadline && (
+                          <button
+                            type="button"
+                            className={styles.clearDeadlineBtn}
+                            onClick={() => setEditDeadline('')}
+                            title="Clear deadline"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
                       <div className={styles.editActions}>
                         <button className={styles.cancelBtn} onClick={handleCancelEdit}>
                           Cancel
@@ -223,6 +257,16 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
                           style={{ backgroundColor: tag.color }}
                         />
                         <span className={styles.tagName}>{tag.name}</span>
+                        {tag.deadline && (
+                          <span className={styles.tagDeadline}>
+                            📅 {(() => {
+                              const dl = tag.deadline;
+                              if (dl.includes('T')) return new Date(dl).toLocaleDateString();
+                              const [y, m, d] = dl.split('-').map(Number);
+                              return new Date(y, m - 1, d).toLocaleDateString();
+                            })()}
+                          </span>
+                        )}
                       </div>
                       <div className={styles.tagActions}>
                         <button
@@ -279,6 +323,33 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
                   />
                 ))}
               </div>
+              <div className={styles.deadlineField}>
+                <label className={styles.deadlineLabel}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  Deadline (optional)
+                </label>
+                <input
+                  type="date"
+                  className={styles.deadlineInput}
+                  value={newTagDeadline}
+                  onChange={(e) => setNewTagDeadline(e.target.value)}
+                />
+                {newTagDeadline && (
+                  <button
+                    type="button"
+                    className={styles.clearDeadlineBtn}
+                    onClick={() => setNewTagDeadline('')}
+                    title="Clear deadline"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
               <div className={styles.addFormPreview}>
                 <span className={styles.previewLabel}>Preview:</span>
                 <span
@@ -291,6 +362,14 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
                 >
                   {newTagName || 'Tag name'}
                 </span>
+                {newTagDeadline && (
+                  <span className={styles.previewDeadline}>
+                    📅 {(() => {
+                      const [y, m, d] = newTagDeadline.split('-').map(Number);
+                      return new Date(y, m - 1, d).toLocaleDateString();
+                    })()}
+                  </span>
+                )}
               </div>
               <div className={styles.addFormActions}>
                 <button className={styles.cancelBtn} onClick={() => setIsAdding(false)}>
