@@ -5,6 +5,7 @@ set -e
 AWS_PROFILE="codya"
 AWS_REGION="us-east-1"
 APP_DIR="../LetsDoItApp"
+export AWS_PAGER=""  # Disable AWS CLI pager to avoid requiring 'q' to exit
 
 # Colors for output
 GREEN='\033[0;32m'
