@@ -99,6 +99,7 @@ const loadingEl = document.getElementById('loading');
 const newTaskInput = document.getElementById('newTaskInput');
 const addTaskBtn = document.getElementById('addTaskBtn');
 const settingsBtn = document.getElementById('settingsBtn');
+const logoEl = document.querySelector('.logo');
 const happinessModal = document.getElementById('happinessModal');
 const syncContainer = document.getElementById('syncContainer');
 const syncBtn = document.getElementById('syncBtn');
@@ -716,6 +717,11 @@ function updateCaptureButtonState() {
 
 // Setup event listeners
 function setupEventListeners() {
+  // Logo click - open website
+  logoEl.addEventListener('click', () => {
+    chrome.tabs.create({ url: 'https://lets-do-it.xyz' });
+  });
+
   // Settings button
   settingsBtn.addEventListener('click', () => {
     chrome.runtime.openOptionsPage();
