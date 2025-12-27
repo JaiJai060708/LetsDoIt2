@@ -51,6 +51,7 @@ const extractUrl = (text) => {
 function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) {
   const [isHovered, setIsHovered] = useState(false);
   const [availableTags, setAvailableTags] = useState([]);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   useEffect(() => {
     getAvailableTags().then(setAvailableTags);
@@ -60,9 +61,24 @@ function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) 
 
   const handleToggleDone = async (e) => {
     e.stopPropagation();
-    const doneAt = task.doneAt ? null : new Date().toISOString();
-    await updateTask(task.id, { doneAt });
-    onUpdate();
+    
+    // If task is already done, immediately toggle it back
+    if (task.doneAt) {
+      await updateTask(task.id, { doneAt: null });
+      onUpdate();
+      return;
+    }
+    
+    // If marking as done, play animation first
+    setIsCompleting(true);
+    
+    // Wait for animation to complete (1s), then actually mark as done
+    setTimeout(async () => {
+      const doneAt = new Date().toISOString();
+      await updateTask(task.id, { doneAt });
+      setIsCompleting(false);
+      onUpdate();
+    }, 1000);
   };
 
   const handleDelete = async (e) => {
@@ -81,7 +97,7 @@ function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) 
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          className={`${styles.task} ${task.doneAt ? styles.done : ''} ${isSelected ? styles.selected : ''} ${taskIsPast ? styles.past : ''} ${compact ? styles.compact : ''} ${snapshot.isDragging ? styles.dragging : ''}`}
+          className={`${styles.task} ${task.doneAt ? styles.done : ''} ${isCompleting ? styles.completing : ''} ${isSelected ? styles.selected : ''} ${taskIsPast ? styles.past : ''} ${compact ? styles.compact : ''} ${snapshot.isDragging ? styles.dragging : ''}`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={() => onSelect?.(task)}
@@ -90,9 +106,10 @@ function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) 
             <input
               type="checkbox"
               className={styles.checkbox}
-              checked={!!task.doneAt}
+              checked={!!task.doneAt || isCompleting}
               onChange={handleToggleDone}
               onClick={(e) => e.stopPropagation()}
+              disabled={isCompleting}
             />
             <span className={styles.content}>{task.content}</span>
             {task.tags && task.tags.length > 0 && (

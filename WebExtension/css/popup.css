@@ -536,6 +536,52 @@ body {
   color: var(--text-muted);
 }
 
+/* Completing animation - strikethrough effect before task is marked done */
+.task.completing {
+  animation: completingFade 1s ease-out forwards;
+}
+
+.task.completing .task-content {
+  position: relative;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+}
+
+.task.completing .task-content::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 2px;
+  background: var(--text-muted);
+  animation: strikethrough 0.4s ease-out 0.1s forwards;
+  width: 0;
+}
+
+@keyframes strikethrough {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes completingFade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+}
+
 .task.past {
   border-left: 3px solid var(--error);
 }
@@ -557,11 +603,13 @@ body {
 }
 
 .task-content {
+  position: relative;
   font-size: 13px;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 0.3s ease;
 }
 
 .task-tags {

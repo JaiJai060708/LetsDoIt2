@@ -616,10 +616,33 @@ async function handleToggleSection(sectionId) {
 
 // Handle toggle done
 async function handleToggleDone(taskId, done) {
-  const doneAt = done ? new Date().toISOString() : null;
-  await updateTask(taskId, { doneAt });
-  await loadTasks();
-  renderSections();
+  // If unchecking, do it immediately
+  if (!done) {
+    await updateTask(taskId, { doneAt: null });
+    await loadTasks();
+    renderSections();
+    return;
+  }
+  
+  // If marking as done, play animation first
+  const taskEl = document.querySelector(`[data-task-id="${taskId}"]`);
+  const checkbox = taskEl?.querySelector('.task-checkbox');
+  
+  if (taskEl) {
+    taskEl.classList.add('completing');
+    if (checkbox) {
+      checkbox.checked = true;
+      checkbox.disabled = true;
+    }
+  }
+  
+  // Wait for animation to complete (1s), then actually mark as done
+  setTimeout(async () => {
+    const doneAt = new Date().toISOString();
+    await updateTask(taskId, { doneAt });
+    await loadTasks();
+    renderSections();
+  }, 1000);
 }
 
 // Handle delete task
