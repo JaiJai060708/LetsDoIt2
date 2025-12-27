@@ -148,6 +148,7 @@
 .themeSelector {
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .themeOption {
@@ -194,6 +195,11 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.themePreview.auto {
+  background: linear-gradient(90deg, #f0f9ff 0%, #f0f9ff 50%, #0a0a0a 50%, #171717 100%);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
 .themePreviewHeader {
   height: 12px;
   width: 100%;
@@ -205,6 +211,10 @@
 
 .themePreview.dark .themePreviewHeader {
   background: linear-gradient(135deg, #1e3a5f 0%, #172554 100%);
+}
+
+.themePreview.auto .themePreviewHeader {
+  background: linear-gradient(90deg, #4a90d9 0%, #4a90d9 50%, #1e3a5f 50%, #172554 100%);
 }
 
 .themeLabel {
