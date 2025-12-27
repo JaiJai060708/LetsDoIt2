@@ -1,47 +1,50 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from './context';
+import { ThemeProvider, SyncProvider, useSync } from './context';
 import HomePage from './pages/HomePage';
 import HappinessPage from './pages/HappinessPage';
 import OptionsPage from './pages/OptionsPage';
-import { getGoogleDriveSyncSettings, syncFromGoogleDrive, setGoogleDriveSyncSettings } from './db/database';
+import { setAutoSyncCallback } from './db/database';
 import './App.css';
 
-function AppContent() {
-  // Auto-sync from Google Drive on app load if enabled
+// Component that wires up the database auto-sync callback
+function SyncCallbackSetup() {
+  const { triggerAutoSync } = useSync();
+  
   useEffect(() => {
-    const performAutoSync = async () => {
-      try {
-        const settings = await getGoogleDriveSyncSettings();
-        if (settings.enabled && settings.autoSync && settings.shareLink) {
-          console.log('Auto-syncing from Google Drive...');
-          await syncFromGoogleDrive();
-          await setGoogleDriveSyncSettings({ lastSyncAt: new Date().toISOString() });
-          console.log('Auto-sync completed');
-        }
-      } catch (error) {
-        console.error('Auto-sync failed:', error);
-      }
-    };
+    // Set the callback so database can trigger sync after modifications
+    setAutoSyncCallback(triggerAutoSync);
     
-    performAutoSync();
-  }, []);
+    // Clean up on unmount
+    return () => {
+      setAutoSyncCallback(null);
+    };
+  }, [triggerAutoSync]);
+  
+  return null;
+}
 
+function AppContent() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/happiness" element={<HappinessPage />} />
-      <Route path="/options" element={<OptionsPage />} />
-    </Routes>
+    <>
+      <SyncCallbackSetup />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/happiness" element={<HappinessPage />} />
+        <Route path="/options" element={<OptionsPage />} />
+      </Routes>
+    </>
   );
 }
 
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <SyncProvider>
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </SyncProvider>
     </ThemeProvider>
   );
 }

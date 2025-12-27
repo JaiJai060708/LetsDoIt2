@@ -4,14 +4,13 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Html5Qrcode } from 'html5-qrcode';
 import NavToggle, { SettingsButton } from '../../components/NavToggle';
 import Logo from '../../components/Logo';
-import { useTheme } from '../../context';
+import { useTheme, useSync, SYNC_STATE } from '../../context';
 import { 
   exportAllData, 
   importAllData, 
   deleteAllData,
   getGoogleDriveSyncSettings,
   setGoogleDriveSyncSettings,
-  syncFromGoogleDrive,
   extractGoogleDriveFileId,
   SYNC_RESULT,
 } from '../../db/database';
@@ -32,17 +31,22 @@ function OptionsPage() {
   // Use theme context
   const { theme, setTheme } = useTheme();
   
+  // Use sync context
+  const { syncState, triggerSync, refreshSyncSettings } = useSync();
+  
   // Google Drive sync state
   const [googleDriveLink, setGoogleDriveLink] = useState('');
   const [googleDriveWriteEndpoint, setGoogleDriveWriteEndpoint] = useState('');
   const [googleDriveEnabled, setGoogleDriveEnabled] = useState(false);
   const [googleDriveAutoSync, setGoogleDriveAutoSync] = useState(false);
   const [googleDriveLastSyncAt, setGoogleDriveLastSyncAt] = useState(null);
-  const [isGoogleDriveSyncing, setIsGoogleDriveSyncing] = useState(false);
   const [isEditingGoogleDriveLink, setIsEditingGoogleDriveLink] = useState(false);
   const [showAdvancedSync, setShowAdvancedSync] = useState(false);
   const [showSetupGuide, setShowSetupGuide] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
+  
+  // Derive syncing state from context
+  const isGoogleDriveSyncing = syncState === SYNC_STATE.SYNCING;
   
   // QR Code state
   const [showQRModal, setShowQRModal] = useState(false);
@@ -148,6 +152,8 @@ function OptionsPage() {
       });
       setGoogleDriveEnabled(!!googleDriveLink);
       setIsEditingGoogleDriveLink(false);
+      // Refresh sync context to pick up new settings
+      await refreshSyncSettings();
       showToast(googleDriveLink ? 'Google Drive settings saved!' : 'Google Drive link removed');
     } catch (error) {
       console.error('Failed to save Google Drive settings:', error);
@@ -161,30 +167,32 @@ function OptionsPage() {
       return;
     }
     
-    setIsGoogleDriveSyncing(true);
     try {
-      const result = await syncFromGoogleDrive();
-      setGoogleDriveLastSyncAt(new Date().toISOString());
-      
-      // Show appropriate message based on sync result
-      switch (result.action) {
-        case SYNC_RESULT.PULLED:
-          showToast(`Pulled ${result.tasksImported} tasks, ${result.habitsImported} habits from cloud`);
-          break;
-        case SYNC_RESULT.PUSHED:
-          showToast('Data pushed to cloud successfully!');
-          break;
-        case SYNC_RESULT.UP_TO_DATE:
-          showToast(result.note || 'Already up to date');
-          break;
-        default:
-          showToast('Sync complete');
+      const result = await triggerSync();
+      if (result) {
+        setGoogleDriveLastSyncAt(new Date().toISOString());
+        
+        // Show appropriate message based on sync result
+        switch (result.action) {
+          case SYNC_RESULT.PULLED:
+            showToast(`Pulled ${result.tasksImported} tasks, ${result.habitsImported} habits from cloud`);
+            break;
+          case SYNC_RESULT.PUSHED:
+            showToast('Data pushed to cloud successfully!');
+            break;
+          case SYNC_RESULT.UP_TO_DATE:
+            showToast(result.note || 'Already up to date');
+            break;
+          case SYNC_RESULT.ERROR:
+            showToast(`Sync failed: ${result.error}`, 'error');
+            break;
+          default:
+            showToast('Sync complete');
+        }
       }
     } catch (error) {
       console.error('Google Drive sync failed:', error);
       showToast(`Sync failed: ${error.message}`, 'error');
-    } finally {
-      setIsGoogleDriveSyncing(false);
     }
   };
 
@@ -192,6 +200,8 @@ function OptionsPage() {
     const newValue = !googleDriveAutoSync;
     setGoogleDriveAutoSync(newValue);
     await setGoogleDriveSyncSettings({ autoSync: newValue });
+    // Refresh sync context to pick up new settings
+    await refreshSyncSettings();
     showToast(newValue ? 'Auto-sync enabled' : 'Auto-sync disabled');
   };
 
@@ -209,6 +219,8 @@ function OptionsPage() {
       autoSync: false,
       lastSyncAt: null,
     });
+    // Refresh sync context to pick up new settings
+    await refreshSyncSettings();
     showToast('Google Drive disconnected');
   };
 

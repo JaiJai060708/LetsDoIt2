@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import DailyTaskList from '../../components/DailyTaskList';
 import WeeklyTaskList from '../../components/WeeklyTaskList';
 import TaskModal from '../../components/TaskModal';
@@ -6,12 +6,15 @@ import NavToggle, { SettingsButton } from '../../components/NavToggle';
 import TodoViewToggle from '../../components/TodoViewToggle';
 import SyncButton from '../../components/SyncButton';
 import Logo from '../../components/Logo';
+import { useSync, SYNC_STATE } from '../../context';
 import styles from './HomePage.module.css';
 
 function HomePage() {
   const [isWeekly, setIsWeekly] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  const { syncState, lastSyncResult } = useSync();
 
   const handleSelectTask = (task) => {
     setSelectedTask(task);
@@ -31,11 +34,13 @@ function HomePage() {
     setSelectedTask(null);
   };
 
-  const handleSyncComplete = useCallback((result) => {
-    console.log('Sync complete:', result);
-    // Trigger refresh after sync
-    setRefreshKey((prev) => prev + 1);
-  }, []);
+  // Refresh data when sync pulls new data (both manual and automatic)
+  useEffect(() => {
+    if (lastSyncResult?.action === 'pulled') {
+      console.log('Data pulled from cloud, refreshing view...');
+      setRefreshKey((prev) => prev + 1);
+    }
+  }, [lastSyncResult]);
 
   return (
     <div className={styles.page}>
@@ -51,7 +56,7 @@ function HomePage() {
         <div className={`${styles.todoContainer} ${isWeekly ? styles.weekly : ''}`}>
           <div className={styles.todoHeader}>
             <TodoViewToggle isWeekly={isWeekly} onToggle={handleToggleView} />
-            <SyncButton onSyncComplete={handleSyncComplete} />
+            <SyncButton />
           </div>
           
           {isWeekly ? (

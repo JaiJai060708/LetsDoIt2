@@ -1,97 +1,33 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  getGoogleDriveSyncSettings, 
-  syncFromGoogleDrive,
-  SYNC_RESULT,
-} from '../../db/database';
+import { useState, useEffect } from 'react';
+import { useSync, SYNC_STATE } from '../../context';
 import styles from './SyncButton.module.css';
 
-// Sync states
-const SYNC_STATE = {
-  IDLE: 'idle',
-  SYNCING: 'syncing',
-  PULLED: 'pulled',
-  PUSHED: 'pushed',
-  UP_TO_DATE: 'upToDate',
-  ERROR: 'error',
-  DISABLED: 'disabled',
-};
-
 function SyncButton({ onSyncComplete }) {
-  const [syncState, setSyncState] = useState(SYNC_STATE.DISABLED);
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
+  const { 
+    syncState, 
+    isEnabled, 
+    statusMessage, 
+    triggerSync,
+    lastSyncResult,
+  } = useSync();
+  
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Check if Google Drive sync is enabled
+  // Call onSyncComplete when data was pulled
   useEffect(() => {
-    const checkSyncSettings = async () => {
-      const settings = await getGoogleDriveSyncSettings();
-      setIsEnabled(settings.enabled && !!settings.shareLink);
-      setSyncState(settings.enabled && settings.shareLink ? SYNC_STATE.IDLE : SYNC_STATE.DISABLED);
-      
-      // Auto-sync on load if enabled
-      if (settings.autoSync && settings.enabled && settings.shareLink) {
-        handleSync();
-      }
-    };
-    checkSyncSettings();
-  }, []);
-
-  const handleSync = useCallback(async () => {
-    if (syncState === SYNC_STATE.SYNCING || !isEnabled) return;
-    
-    setSyncState(SYNC_STATE.SYNCING);
-    setStatusMessage('');
-    
-    try {
-      const result = await syncFromGoogleDrive();
-      
-      // Set state based on sync result
-      switch (result.action) {
-        case SYNC_RESULT.PULLED:
-          setSyncState(SYNC_STATE.PULLED);
-          setStatusMessage(`Pulled ${result.tasksImported} tasks, ${result.habitsImported} habits`);
-          break;
-        case SYNC_RESULT.PUSHED:
-          setSyncState(SYNC_STATE.PUSHED);
-          setStatusMessage('Data pushed to cloud');
-          break;
-        case SYNC_RESULT.UP_TO_DATE:
-          setSyncState(SYNC_STATE.UP_TO_DATE);
-          setStatusMessage(result.note || 'Already up to date');
-          break;
-        default:
-          setSyncState(SYNC_STATE.UP_TO_DATE);
-      }
-      
-      // Call onSyncComplete callback if data was changed
-      if (onSyncComplete && result.action === SYNC_RESULT.PULLED) {
-        onSyncComplete(result);
-      }
-      
-      // Reset to idle after status display
-      setTimeout(() => {
-        setSyncState(SYNC_STATE.IDLE);
-        setStatusMessage('');
-      }, 3000);
-    } catch (error) {
-      console.error('Sync failed:', error);
-      setSyncState(SYNC_STATE.ERROR);
-      setStatusMessage(error.message || 'Sync failed');
-      
-      // Reset to idle after error display
-      setTimeout(() => {
-        setSyncState(SYNC_STATE.IDLE);
-        setStatusMessage('');
-      }, 5000);
+    if (lastSyncResult?.action === 'pulled' && onSyncComplete) {
+      onSyncComplete(lastSyncResult);
     }
-  }, [syncState, isEnabled, onSyncComplete]);
+  }, [lastSyncResult, onSyncComplete]);
 
   // Don't render if sync is not configured
   if (!isEnabled && syncState === SYNC_STATE.DISABLED) {
     return null;
   }
+
+  const handleClick = () => {
+    triggerSync();
+  };
 
   const getIcon = () => {
     switch (syncState) {
@@ -205,7 +141,7 @@ function SyncButton({ onSyncComplete }) {
     <div className={styles.container}>
       <button
         className={`${styles.syncButton} ${styles[syncState]}`}
-        onClick={handleSync}
+        onClick={handleClick}
         disabled={syncState === SYNC_STATE.SYNCING}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
@@ -225,4 +161,3 @@ function SyncButton({ onSyncComplete }) {
 }
 
 export default SyncButton;
-

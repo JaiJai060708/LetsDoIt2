@@ -6,6 +6,27 @@ const TASKS_STORE = 'tasks';
 const SETTINGS_STORE = 'settings';
 const HABITS_STORE = 'habits';
 
+// Auto-sync callback - will be set by SyncContext
+let autoSyncCallback = null;
+
+/**
+ * Set the callback function to trigger auto-sync after data modifications
+ * This is called by SyncContext when it mounts
+ */
+export function setAutoSyncCallback(callback) {
+  autoSyncCallback = callback;
+}
+
+/**
+ * Trigger auto-sync if callback is set
+ * Called after data modifications when auto-sync is enabled
+ */
+function triggerAutoSync() {
+  if (autoSyncCallback) {
+    autoSyncCallback();
+  }
+}
+
 // Default tags that come pre-configured
 const DEFAULT_TAGS = [
   { id: 'personal', name: 'Personal', color: '#8b5cf6' },
@@ -110,6 +131,7 @@ export async function createTask(task) {
   };
   await db.add(TASKS_STORE, newTask);
   await updateLocalDataTimestamp();
+  triggerAutoSync();
   return newTask;
 }
 
@@ -130,6 +152,7 @@ export async function updateTask(id, updates) {
   };
   await db.put(TASKS_STORE, updatedTask);
   await updateLocalDataTimestamp();
+  triggerAutoSync();
   return updatedTask;
 }
 
@@ -140,6 +163,7 @@ export async function deleteTask(id) {
   const db = await initDB();
   await db.delete(TASKS_STORE, id);
   await updateLocalDataTimestamp();
+  triggerAutoSync();
   return id;
 }
 
@@ -240,6 +264,8 @@ export async function addTag(tag) {
   };
   tags.push(newTag);
   await setSetting('availableTags', tags);
+  await updateLocalDataTimestamp();
+  triggerAutoSync();
   return newTag;
 }
 
@@ -257,6 +283,8 @@ export async function updateTag(tagId, updates) {
     }
     tags[index] = updatedTag;
     await setSetting('availableTags', tags);
+    await updateLocalDataTimestamp();
+    triggerAutoSync();
   }
   return tags;
 }
@@ -268,6 +296,8 @@ export async function deleteTag(tagId) {
   const tags = await getAvailableTags();
   const filtered = tags.filter(t => t.id !== tagId);
   await setSetting('availableTags', filtered);
+  await updateLocalDataTimestamp();
+  triggerAutoSync();
   return filtered;
 }
 
@@ -356,6 +386,7 @@ export async function upsertHabit(habitData) {
     };
     await db.put(HABITS_STORE, updated);
     await updateLocalDataTimestamp();
+    triggerAutoSync();
     return updated;
   } else {
     // Create new
@@ -368,6 +399,7 @@ export async function upsertHabit(habitData) {
     };
     await db.add(HABITS_STORE, newEntry);
     await updateLocalDataTimestamp();
+    triggerAutoSync();
     return newEntry;
   }
 }
@@ -379,6 +411,7 @@ export async function deleteHabit(id) {
   const db = await ensureHabitsStore();
   await db.delete(HABITS_STORE, id);
   await updateLocalDataTimestamp();
+  triggerAutoSync();
   return id;
 }
 
