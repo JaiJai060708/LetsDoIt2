@@ -1487,6 +1487,194 @@
   display: none;
 }
 
+/* Cloud Bottom Actions */
+.cloudBottomActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* QR Code Share Button */
+.cloudQRBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8b5cf6;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.cloudQRBtn:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.cloudQRBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* QR Code Scan Button */
+.cloudScanQRBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+  border: 2px dashed rgba(139, 92, 246, 0.4);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #8b5cf6;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.cloudScanQRBtn:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border-color: rgba(139, 92, 246, 0.6);
+  transform: translateY(-2px);
+}
+
+.cloudScanQRBtn:active {
+  transform: translateY(0);
+}
+
+.cloudScanQRBtn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* QR Code Modal */
+.qrModal {
+  max-width: 360px;
+  padding: 0;
+  text-align: center;
+  overflow: hidden;
+}
+
+.qrModalContent {
+  padding: 32px 28px;
+}
+
+.qrCodeWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: var(--bg-primary);
+  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  margin-bottom: 20px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.qrModalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.qrModalDescription {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.qrModalInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+}
+
+.qrInfoItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.qrInfoItem svg {
+  width: 14px;
+  height: 14px;
+  color: var(--success);
+}
+
+/* QR Scanner Modal */
+.qrScannerModal {
+  max-width: 380px;
+  padding: 0;
+  text-align: center;
+  overflow: hidden;
+}
+
+.qrScannerContent {
+  padding: 24px;
+}
+
+.qrScannerTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.qrScannerDescription {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 20px;
+}
+
+.qrScannerViewport {
+  width: 100%;
+  min-height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.qrScannerViewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qrScannerCancelBtn {
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--btn-secondary-bg);
+  border: 1px solid var(--btn-secondary-border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.qrScannerCancelBtn:hover {
+  background: var(--bg-active);
+  color: var(--text-secondary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {
@@ -1677,5 +1865,42 @@
 
   .setupGuideFooter {
     padding: 16px 20px;
+  }
+
+  /* QR Code responsive */
+  .cloudBottomActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .cloudQRBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 14px;
+  }
+
+  .cloudDisconnectBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .qrModal {
+    max-width: 95%;
+  }
+
+  .qrModalContent {
+    padding: 24px 20px;
+  }
+
+  .qrScannerModal {
+    max-width: 95%;
+  }
+
+  .qrScannerContent {
+    padding: 20px;
+  }
+
+  .qrScannerViewport {
+    min-height: 260px;
   }
 }

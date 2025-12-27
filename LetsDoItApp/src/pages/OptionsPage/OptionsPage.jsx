@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
+import { Html5Qrcode } from 'html5-qrcode';
 import NavToggle, { SettingsButton } from '../../components/NavToggle';
 import Logo from '../../components/Logo';
 import { useTheme } from '../../context';
@@ -14,6 +16,12 @@ import {
   SYNC_RESULT,
 } from '../../db/database';
 import styles from './OptionsPage.module.css';
+
+// Check if device is mobile
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+         (window.innerWidth <= 768 && 'ontouchstart' in window);
+};
 
 // Sample app integrations
 const AVAILABLE_APPS = [
@@ -46,6 +54,13 @@ function OptionsPage() {
   const [showAdvancedSync, setShowAdvancedSync] = useState(false);
   const [showSetupGuide, setShowSetupGuide] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
+  
+  // QR Code state
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const qrScannerRef = useRef(null);
+  const html5QrCodeRef = useRef(null);
 
   // Load Google Drive settings on mount
   useEffect(() => {
@@ -59,6 +74,14 @@ function OptionsPage() {
       setShowAdvancedSync(!!googleDriveSettings.writeEndpoint);
     };
     loadSettings();
+  }, []);
+
+  // Check if mobile device
+  useEffect(() => {
+    setIsMobile(isMobileDevice());
+    const handleResize = () => setIsMobile(isMobileDevice());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -226,6 +249,94 @@ function OptionsPage() {
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
   };
+
+  // Generate QR code data
+  const getQRCodeData = () => {
+    const data = {
+      type: 'letsdoit-sync',
+      shareLink: googleDriveLink,
+    };
+    if (googleDriveWriteEndpoint) {
+      data.writeEndpoint = googleDriveWriteEndpoint;
+    }
+    return JSON.stringify(data);
+  };
+
+  // Handle QR code scan result
+  const handleQRScanSuccess = useCallback(async (decodedText) => {
+    try {
+      const data = JSON.parse(decodedText);
+      if (data.type === 'letsdoit-sync' && data.shareLink) {
+        setGoogleDriveLink(data.shareLink);
+        if (data.writeEndpoint) {
+          setGoogleDriveWriteEndpoint(data.writeEndpoint);
+          setShowAdvancedSync(true);
+        }
+        // Stop scanner and close modal
+        if (html5QrCodeRef.current) {
+          await html5QrCodeRef.current.stop();
+          html5QrCodeRef.current = null;
+        }
+        setShowQRScanner(false);
+        showToast('Sync settings imported from QR code!');
+      } else {
+        showToast('Invalid QR code format', 'error');
+      }
+    } catch {
+      showToast('Could not read QR code data', 'error');
+    }
+  }, []);
+
+  // Start QR scanner
+  const startQRScanner = useCallback(async () => {
+    setShowQRScanner(true);
+    
+    // Wait for modal to render
+    setTimeout(async () => {
+      if (!qrScannerRef.current) return;
+      
+      try {
+        const html5QrCode = new Html5Qrcode('qr-scanner-container');
+        html5QrCodeRef.current = html5QrCode;
+        
+        await html5QrCode.start(
+          { facingMode: 'environment' },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+          },
+          handleQRScanSuccess,
+          () => {} // Ignore scan failures
+        );
+      } catch (err) {
+        console.error('Failed to start QR scanner:', err);
+        showToast('Could not access camera', 'error');
+        setShowQRScanner(false);
+      }
+    }, 100);
+  }, [handleQRScanSuccess]);
+
+  // Stop QR scanner
+  const stopQRScanner = useCallback(async () => {
+    if (html5QrCodeRef.current) {
+      try {
+        await html5QrCodeRef.current.stop();
+      } catch {
+        // Ignore stop errors
+      }
+      html5QrCodeRef.current = null;
+    }
+    setShowQRScanner(false);
+  }, []);
+
+  // Cleanup scanner on unmount
+  useEffect(() => {
+    return () => {
+      if (html5QrCodeRef.current) {
+        html5QrCodeRef.current.stop().catch(() => {});
+      }
+    };
+  }, []);
 
   return (
     <div className={styles.page}>
@@ -409,6 +520,20 @@ function OptionsPage() {
                       </div>
                     </div>
                     
+                    {/* QR Code Scanner Button - Mobile Only */}
+                    {isMobile && !googleDriveLink && (
+                      <button
+                        className={styles.cloudScanQRBtn}
+                        onClick={startQRScanner}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
+                          <rect x="7" y="7" width="10" height="10" rx="1" />
+                        </svg>
+                        Scan QR Code to Import Settings
+                      </button>
+                    )}
+                    
                     <div className={styles.cloudInputWrapper}>
                       <div className={styles.cloudInputIcon}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -568,15 +693,33 @@ function OptionsPage() {
                       </button>
                     </div>
 
-                    <button
-                      className={styles.cloudDisconnectBtn}
-                      onClick={handleDisconnectGoogleDrive}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10" />
-                      </svg>
-                      Disconnect
-                    </button>
+                    <div className={styles.cloudBottomActions}>
+                      <button
+                        className={styles.cloudQRBtn}
+                        onClick={() => setShowQRModal(true)}
+                        title="Share sync settings via QR code"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="3" width="7" height="7" rx="1" />
+                          <rect x="14" y="3" width="7" height="7" rx="1" />
+                          <rect x="3" y="14" width="7" height="7" rx="1" />
+                          <rect x="14" y="14" width="3" height="3" />
+                          <rect x="18" y="14" width="3" height="3" />
+                          <rect x="14" y="18" width="3" height="3" />
+                          <rect x="18" y="18" width="3" height="3" />
+                        </svg>
+                        Share QR Code
+                      </button>
+                      <button
+                        className={styles.cloudDisconnectBtn}
+                        onClick={handleDisconnectGoogleDrive}
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10" />
+                        </svg>
+                        Disconnect
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -811,6 +954,91 @@ function doGet(e) {
                 onClick={() => setShowSetupGuide(false)}
               >
                 Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowQRModal(false)}>
+          <div className={`${styles.modal} ${styles.qrModal}`} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.modalCloseBtn}
+              onClick={() => setShowQRModal(false)}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className={styles.qrModalContent}>
+              <div className={styles.qrCodeWrapper}>
+                <QRCodeSVG
+                  value={getQRCodeData()}
+                  size={220}
+                  level="M"
+                  includeMargin={true}
+                  bgColor="var(--bg-primary)"
+                  fgColor="var(--text-primary)"
+                />
+              </div>
+              <h3 className={styles.qrModalTitle}>Scan to Import Settings</h3>
+              <p className={styles.qrModalDescription}>
+                Use another device to scan this QR code and automatically import your Google Drive sync settings.
+              </p>
+              <div className={styles.qrModalInfo}>
+                <div className={styles.qrInfoItem}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M7 10l5 5 5-5M12 15V3" />
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  </svg>
+                  <span>Read: {googleDriveLink ? 'Configured' : 'Not set'}</span>
+                </div>
+                {googleDriveWriteEndpoint && (
+                  <div className={styles.qrInfoItem}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17 8l-5-5-5 5M12 3v12" />
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    </svg>
+                    <span>Write: Configured</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <div className={styles.modalOverlay} onClick={stopQRScanner}>
+          <div className={`${styles.modal} ${styles.qrScannerModal}`} onClick={(e) => e.stopPropagation()}>
+            <button 
+              className={styles.modalCloseBtn}
+              onClick={stopQRScanner}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className={styles.qrScannerContent}>
+              <h3 className={styles.qrScannerTitle}>Scan QR Code</h3>
+              <p className={styles.qrScannerDescription}>
+                Point your camera at a LetsDoIt sync QR code
+              </p>
+              <div 
+                id="qr-scanner-container" 
+                ref={qrScannerRef}
+                className={styles.qrScannerViewport}
+              />
+              <button 
+                className={styles.qrScannerCancelBtn}
+                onClick={stopQRScanner}
+              >
+                Cancel
               </button>
             </div>
           </div>
