@@ -85,6 +85,10 @@ function OptionsPage() {
   // Theme handlers
   const handleThemeChange = async (newTheme) => {
     await setTheme(newTheme);
+    if (newTheme === 'auto') {
+      showToast('Theme set to Automatic mode');
+      return;
+    }
     showToast(`Theme changed to ${newTheme === 'light' ? 'Day' : 'Night'} mode`);
   };
 
@@ -369,6 +373,20 @@ function OptionsPage() {
             </div>
 
             <div className={styles.themeSelector}>
+              <button
+                className={`${styles.themeOption} ${theme === 'auto' ? styles.active : ''}`}
+                onClick={() => handleThemeChange('auto')}
+              >
+                <div className={`${styles.themePreview} ${styles.auto}`}>
+                  <div className={styles.themePreviewHeader}></div>
+                </div>
+                <span className={styles.themeLabel}>🕒 Automatic</span>
+                <div className={styles.themeCheckmark}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+              </button>
               <button 
                 className={`${styles.themeOption} ${theme === 'light' ? styles.active : ''}`}
                 onClick={() => handleThemeChange('light')}
