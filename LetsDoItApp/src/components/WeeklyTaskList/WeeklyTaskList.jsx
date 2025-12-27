@@ -24,6 +24,8 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [weekTasks, setWeekTasks] = useState(Array(7).fill([]));
   const [isLoading, setIsLoading] = useState(true);
   const [tagDeadlinesByDay, setTagDeadlinesByDay] = useState(Array(7).fill([]));
+  const [isMobile, setIsMobile] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   const weekStart = getWeekStart(currentDate);
 
@@ -86,6 +88,51 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
 
     return () => window.removeEventListener('focus', handleFocus);
   }, [loadTasks, loadTagDeadlines]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsKeyboardOpen(false);
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    let baselineHeight = viewport.height;
+    const threshold = 140;
+
+    const handleResize = () => {
+      const height = viewport.height;
+      const isOpen = baselineHeight - height > threshold;
+      setIsKeyboardOpen(isOpen);
+      if (!isOpen) {
+        baselineHeight = height;
+      }
+    };
+
+    const handleOrientationChange = () => {
+      baselineHeight = viewport.height;
+      handleResize();
+    };
+
+    viewport.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      viewport.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [isMobile]);
 
   const handlePrevWeek = () => {
     setCurrentDate(shiftWeek(currentDate, -1));
@@ -170,7 +217,7 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isMobile && isKeyboardOpen ? styles.keyboardOpen : ''}`}>
       <div className={styles.header}>
         <div className={styles.navigation}>
           <button className={styles.navBtn} onClick={handleToday}>
@@ -252,6 +299,7 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
         <AddTask
           onTaskCreated={handleTaskCreated}
           defaultDueDate={getDefaultDueDate()}
+          compact={isMobile && isKeyboardOpen}
         />
       </div>
     </div>

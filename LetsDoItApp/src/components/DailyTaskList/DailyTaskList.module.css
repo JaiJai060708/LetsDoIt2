@@ -308,24 +308,6 @@
   width: 100%;
 }
 
-.addTaskHeader {
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px 4px 0;
-}
-
-.addTaskTitle {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.addTaskSubtitle {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
 .keyboardOpen {
   background: transparent;
   border: none;
@@ -339,21 +321,16 @@
 
 .keyboardOpen .addTaskWrapper {
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 50;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 24px 16px calc(16px + env(safe-area-inset-bottom));
+  padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
   background: var(--bg-page);
 }
 
-.keyboardOpen .addTaskHeader {
-  display: flex;
-}
-
 .keyboardOpen .addTaskWrapper form {
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--card-border);
 }
@@ -370,6 +347,6 @@
   }
 
   .keyboardOpen .addTaskWrapper {
-    padding: 20px 12px calc(12px + env(safe-area-inset-bottom));
+    padding: 6px 12px calc(10px + env(safe-area-inset-bottom));
   }
 }

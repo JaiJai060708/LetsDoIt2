@@ -447,13 +447,10 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
       </div>
 
       <div className={styles.addTaskWrapper}>
-        {isMobile && isKeyboardOpen && (
-          <div className={styles.addTaskHeader}>
-            <span className={styles.addTaskTitle}>Add Task</span>
-            <span className={styles.addTaskSubtitle}>Focused input while the keyboard is up</span>
-          </div>
-        )}
-        <AddTask onTaskCreated={handleTaskCreated} />
+        <AddTask
+          onTaskCreated={handleTaskCreated}
+          compact={isMobile && isKeyboardOpen}
+        />
       </div>
     </div>
   );
