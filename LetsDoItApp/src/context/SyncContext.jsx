@@ -55,11 +55,24 @@ export function SyncProvider({ children }) {
   }, []);
 
   // The core sync function
-  const performSync = useCallback(async () => {
-    if (isSyncingRef.current || !isEnabled) {
-      if (!isEnabled) return null;
+  // forceSync parameter allows bypassing the isEnabled state check (for initial sync before state is set)
+  const performSync = useCallback(async (forceSync = false) => {
+    // Check if sync should proceed
+    let shouldSync = isEnabled || forceSync;
+    
+    // If not enabled by state, double-check the database settings (handles race condition on initial load)
+    if (!shouldSync && !forceSync) {
+      const settings = await getGoogleDriveSyncSettings();
+      shouldSync = settings.enabled && !!settings.shareLink;
+    }
+    
+    if (isSyncingRef.current) {
       // Queue for later if currently syncing
       pendingAutoSyncRef.current = true;
+      return null;
+    }
+    
+    if (!shouldSync) {
       return null;
     }
     
@@ -156,13 +169,14 @@ export function SyncProvider({ children }) {
     };
   }, []);
 
-  // Initial auto-sync on app load if enabled
+  // Initial auto-sync on app load/refresh if enabled
   useEffect(() => {
     const performInitialSync = async () => {
       const settings = await getGoogleDriveSyncSettings();
       if (settings.enabled && settings.autoSync && settings.shareLink) {
-        console.log('Auto-syncing on app load...');
-        performSync();
+        console.log('Auto-syncing on app load/refresh...');
+        // Use forceSync=true to bypass state check (state might not be set yet)
+        performSync(true);
       }
     };
     
@@ -177,7 +191,8 @@ export function SyncProvider({ children }) {
         const settings = await getGoogleDriveSyncSettings();
         if (settings.enabled && settings.autoSync && settings.shareLink) {
           console.log('Tab became active, auto-syncing...');
-          performSync();
+          // Use forceSync=true to bypass state check
+          performSync(true);
         }
       }
     };
