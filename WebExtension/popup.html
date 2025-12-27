@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LetsDoIt Tasks</title>
+  <link rel="stylesheet" href="css/popup.css">
+</head>
+<body>
+  <div class="container" id="app">
+    <header class="header">
+      <div class="logo">
+        <svg class="logo-svg" viewBox="0 0 140 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Outer paint splash - light blue wash -->
+          <path d="M5 30C3 22 8 14 20 10C28 7 42 5 60 6C78 7 95 10 110 15C122 19 132 25 130 33C128 41 118 47 100 48C82 49 55 48 35 45C15 42 7 38 5 30Z" fill="#a8d4eb" opacity="0.6"/>
+          <!-- Main brush stroke - dynamic sweep -->
+          <path d="M12 32C8 24 15 16 32 12C45 9 62 8 80 10C98 12 115 17 125 24C132 29 130 36 122 40C110 46 88 47 65 46C42 45 22 42 14 37C6 32 16 40 12 32Z" fill="#7ab8e0"/>
+          <!-- Mid layer - texture -->
+          <path d="M18 30C14 23 25 17 45 14C60 12 78 12 95 16C108 19 118 25 115 32C112 39 95 43 72 43C49 43 28 40 20 35C12 30 22 37 18 30Z" fill="#5ba3d4"/>
+          <!-- Inner stroke - core -->
+          <path d="M25 29C22 24 35 19 55 17C70 16 88 17 102 21C112 24 115 29 110 34C105 39 88 41 68 40C48 39 30 36 24 32C18 28 28 34 25 29Z" fill="#6bb1dc"/>
+          <!-- Paint drips and splatters -->
+          <ellipse cx="8" cy="35" rx="3" ry="4" fill="#7ab8e0" opacity="0.7"/>
+          <circle cx="15" cy="42" r="2.5" fill="#5ba3d4" opacity="0.5"/>
+          <circle cx="125" cy="28" r="3" fill="#7ab8e0" opacity="0.6"/>
+          <ellipse cx="130" cy="35" rx="2.5" ry="3" fill="#a8d4eb" opacity="0.5"/>
+          <circle cx="22" cy="10" r="2" fill="#a8d4eb" opacity="0.4"/>
+          <circle cx="118" cy="14" r="2.5" fill="#7ab8e0" opacity="0.5"/>
+          <!-- Small accent dots -->
+          <circle cx="6" cy="25" r="1.5" fill="#5ba3d4" opacity="0.4"/>
+          <circle cx="133" cy="30" r="1.5" fill="#6bb1dc" opacity="0.4"/>
+          <circle cx="28" cy="46" r="1.8" fill="#7ab8e0" opacity="0.3"/>
+          <circle cx="108" cy="46" r="1.5" fill="#5ba3d4" opacity="0.35"/>
+          <!-- "letsdoit" text -->
+          <text x="70" y="32" text-anchor="middle" class="logo-text" fill="white">letsdoit</text>
+        </svg>
+      </div>
+      <div class="header-actions">
+        <div class="sync-container" id="syncContainer" style="display: none;">
+          <button class="sync-btn" id="syncBtn" title="Sync with Google Drive">
+            <svg class="sync-icon cloud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" />
+            </svg>
+            <span class="sync-label">Sync</span>
+          </button>
+          <div class="sync-tooltip" id="syncTooltip"></div>
+        </div>
+        <button class="settings-btn" id="settingsBtn" title="Options">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="content" id="taskSections">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <span>Loading tasks...</span>
+      </div>
+    </main>
+
+    <footer class="add-task-bar">
+      <input type="text" id="newTaskInput" class="add-task-input" placeholder="Add a new task...">
+      <button class="add-task-btn" id="addTaskBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+    </footer>
+  </div>
+
+  <!-- Happiness Survey Modal -->
+  <div class="modal-overlay" id="happinessModal" style="display: none;">
+    <div class="modal" id="happinessModalContent">
+      <button class="modal-close" id="closeHappinessModal">×</button>
+      
+      <div class="modal-header">
+        <span class="date-label" id="happinessDateLabel"></span>
+      </div>
+
+      <div class="step-content" id="scoreStep">
+        <h2 class="question">How do you feel?</h2>
+        <div class="scores-container" id="scoresContainer"></div>
+        <div class="selected-info" id="selectedInfo" style="display: none;">
+          <span class="selected-color" id="selectedColor"></span>
+          <span class="selected-label" id="selectedLabel"></span>
+        </div>
+      </div>
+
+      <div class="step-content" id="noteStep" style="display: none;">
+        <div class="selected-preview" id="selectedPreview">
+          <span class="preview-color" id="previewColor"></span>
+          <span id="previewLabel"></span>
+          <button class="change-btn" id="changeScoreBtn">Change</button>
+        </div>
+        
+        <h2 class="question">Tell us more</h2>
+        <textarea class="note-input" id="noteInput" placeholder="What made you feel this way? (optional)" rows="4"></textarea>
+        
+        <div class="modal-actions">
+          <button class="back-btn" id="backBtn">← Back</button>
+          <button class="submit-btn" id="submitHappinessBtn">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/popup.js"></script>
+</body>
+</html>
+

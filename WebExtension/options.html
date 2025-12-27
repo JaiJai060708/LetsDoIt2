@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LetsDoIt Options</title>
+  <link rel="stylesheet" href="css/options.css">
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <svg class="logo-svg" viewBox="0 0 140 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer paint splash - light blue wash -->
+            <path d="M5 30C3 22 8 14 20 10C28 7 42 5 60 6C78 7 95 10 110 15C122 19 132 25 130 33C128 41 118 47 100 48C82 49 55 48 35 45C15 42 7 38 5 30Z" fill="#a8d4eb" opacity="0.6"/>
+            <!-- Main brush stroke - dynamic sweep -->
+            <path d="M12 32C8 24 15 16 32 12C45 9 62 8 80 10C98 12 115 17 125 24C132 29 130 36 122 40C110 46 88 47 65 46C42 45 22 42 14 37C6 32 16 40 12 32Z" fill="#7ab8e0"/>
+            <!-- Mid layer - texture -->
+            <path d="M18 30C14 23 25 17 45 14C60 12 78 12 95 16C108 19 118 25 115 32C112 39 95 43 72 43C49 43 28 40 20 35C12 30 22 37 18 30Z" fill="#5ba3d4"/>
+            <!-- Inner stroke - core -->
+            <path d="M25 29C22 24 35 19 55 17C70 16 88 17 102 21C112 24 115 29 110 34C105 39 88 41 68 40C48 39 30 36 24 32C18 28 28 34 25 29Z" fill="#6bb1dc"/>
+            <!-- Paint drips and splatters -->
+            <ellipse cx="8" cy="35" rx="3" ry="4" fill="#7ab8e0" opacity="0.7"/>
+            <circle cx="15" cy="42" r="2.5" fill="#5ba3d4" opacity="0.5"/>
+            <circle cx="125" cy="28" r="3" fill="#7ab8e0" opacity="0.6"/>
+            <ellipse cx="130" cy="35" rx="2.5" ry="3" fill="#a8d4eb" opacity="0.5"/>
+            <circle cx="22" cy="10" r="2" fill="#a8d4eb" opacity="0.4"/>
+            <circle cx="118" cy="14" r="2.5" fill="#7ab8e0" opacity="0.5"/>
+            <!-- Small accent dots -->
+            <circle cx="6" cy="25" r="1.5" fill="#5ba3d4" opacity="0.4"/>
+            <circle cx="133" cy="30" r="1.5" fill="#6bb1dc" opacity="0.4"/>
+            <circle cx="28" cy="46" r="1.8" fill="#7ab8e0" opacity="0.3"/>
+            <circle cx="108" cy="46" r="1.5" fill="#5ba3d4" opacity="0.35"/>
+            <!-- "letsdoit" text -->
+            <text x="70" y="32" text-anchor="middle" class="logo-text" fill="white">letsdoit</text>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="container">
+        <div class="page-header">
+          <h1 class="page-title">
+            <span class="title-icon">⚙️</span>
+            Options
+          </h1>
+          <p class="page-subtitle">
+            Manage your sync settings and data
+          </p>
+        </div>
+
+        <!-- Google Drive Sync Section -->
+        <section class="section">
+          <div class="section-header">
+            <div class="section-icon data">💾</div>
+            <div class="section-title-group">
+              <h2 class="section-title">Google Drive Sync</h2>
+              <p class="section-description">
+                Sync your tasks across devices using Google Drive
+              </p>
+            </div>
+          </div>
+
+          <div class="cloud-card">
+            <div class="cloud-header">
+              <div class="cloud-logo">
+                <svg viewBox="0 0 87.3 78" fill="none">
+                  <path d="M6.6 66.85L17.85 45.3l14.1 24.45a13.34 13.34 0 01-25.35-2.9z" fill="#0066DA"/>
+                  <path d="M43.65 66.85L29.55 42.4 43.65 18l14.1 24.4z" fill="#00AC47"/>
+                  <path d="M80.7 66.85L69.45 45.3l-14.1 24.45a13.34 13.34 0 0025.35-2.9z" fill="#EA4335"/>
+                  <path d="M43.65 18L29.55 42.4l-14.1-24.45a13.34 13.34 0 0128.2.05z" fill="#00832D"/>
+                  <path d="M43.65 18l14.1 24.4 14.1-24.45a13.34 13.34 0 00-28.2.05z" fill="#2684FC"/>
+                  <path d="M57.75 42.4L43.65 66.85h28.2a13.34 13.34 0 00-14.1-24.45z" fill="#FFBA00"/>
+                </svg>
+              </div>
+              <div class="cloud-title-area">
+                <h3 class="cloud-title">Google Drive</h3>
+                <p class="cloud-subtitle">Cloud Backup & Sync</p>
+              </div>
+              <div class="cloud-status-badge" id="statusBadge" style="display: none;">
+                <span class="cloud-status-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </span>
+                Connected
+              </div>
+            </div>
+
+            <!-- Setup View -->
+            <div class="cloud-setup" id="cloudSetup">
+              <div class="cloud-instruction-card">
+                <div class="cloud-instruction-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4M12 8h.01" />
+                  </svg>
+                </div>
+                <div class="cloud-instruction-text">
+                  <p class="cloud-instruction-title">How to connect</p>
+                  <ol class="cloud-instruction-steps">
+                    <li>Export your data and upload to Google Drive</li>
+                    <li>Right-click → Share → "Anyone with the link"</li>
+                    <li>Paste the share link below</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div class="cloud-input-wrapper">
+                <div class="cloud-input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M7 10l5 5 5-5M12 15V3" />
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  </svg>
+                </div>
+                <input type="url" id="readLinkInput" class="cloud-input" placeholder="Paste your Google Drive share link (for reading)...">
+              </div>
+
+              <!-- Advanced settings for two-way sync -->
+              <button class="cloud-advanced-toggle" id="advancedToggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="advancedChevron">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+                <span>Advanced: Two-way sync (push to cloud)</span>
+              </button>
+
+              <div class="cloud-advanced-panel" id="advancedPanel" style="display: none;">
+                <div class="cloud-advanced-header">
+                  <p class="cloud-advanced-note">
+                    To enable pushing data to Google Drive, you need to set up a Google Apps Script Web App.
+                  </p>
+                  <button class="cloud-setup-guide-btn" id="setupGuideBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+                    </svg>
+                    Setup Guide
+                  </button>
+                </div>
+                <div class="cloud-input-wrapper">
+                  <div class="cloud-input-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 8l-5-5-5 5M12 3v12" />
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    </svg>
+                  </div>
+                  <input type="url" id="writeLinkInput" class="cloud-input" placeholder="Google Apps Script Web App URL (for writing)...">
+                </div>
+              </div>
+
+              <div class="cloud-setup-actions">
+                <button class="cloud-connect-btn" id="connectBtn" disabled>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+                  </svg>
+                  Connect to Drive
+                </button>
+                <button class="cloud-cancel-btn" id="cancelEditBtn" style="display: none;">
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <!-- Connected View -->
+            <div class="cloud-connected" id="cloudConnected" style="display: none;">
+              <div class="cloud-file-card">
+                <div class="cloud-file-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <line x1="10" y1="9" x2="8" y2="9" />
+                  </svg>
+                </div>
+                <div class="cloud-file-info">
+                  <p class="cloud-file-name">backup.json</p>
+                  <p class="cloud-file-link" id="cloudFileLink"></p>
+                </div>
+                <button class="cloud-edit-btn" id="editLinkBtn" title="Edit link">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="cloud-sync-panel">
+                <div class="cloud-sync-info">
+                  <div class="cloud-sync-timestamp">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12,6 12,12 16,14" />
+                    </svg>
+                    <span>Last synced: <strong id="lastSyncTime">Never</strong></span>
+                  </div>
+                  
+                  <label class="cloud-auto-sync">
+                    <input type="checkbox" id="autoSyncCheckbox">
+                    <span class="cloud-auto-sync-slider"></span>
+                    <span class="cloud-auto-sync-label">Auto-sync on app load</span>
+                  </label>
+                </div>
+
+                <button class="cloud-sync-btn" id="syncBtn">
+                  <svg class="cloud-sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6" />
+                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                  </svg>
+                  <span>Sync Now</span>
+                </button>
+              </div>
+
+              <div class="cloud-bottom-actions">
+                <button class="cloud-disconnect-btn" id="disconnectBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18.36 6.64a9 9 0 11-12.73 0M12 2v10" />
+                  </svg>
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Danger Zone -->
+        <section class="section danger-zone">
+          <div class="section-header">
+            <div class="section-icon danger">⚠️</div>
+            <div class="section-title-group">
+              <h2 class="section-title">Danger Zone</h2>
+              <p class="section-description">
+                Irreversible actions that permanently affect your data
+              </p>
+            </div>
+          </div>
+
+          <button class="delete-button" id="deleteAllBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
+            </svg>
+            Delete All Data
+          </button>
+        </section>
+      </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal" style="display: none;">
+      <div class="modal">
+        <div class="modal-icon">🗑️</div>
+        <h3 class="modal-title">Delete All Data?</h3>
+        <p class="modal-description">
+          This action cannot be undone. All your tasks, habits, settings, and tags will be permanently deleted.
+        </p>
+        <div class="modal-actions">
+          <button class="modal-cancel-btn" id="cancelDeleteBtn">Cancel</button>
+          <button class="modal-delete-btn" id="confirmDeleteBtn">Delete Everything</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Setup Guide Modal -->
+    <div class="modal-overlay" id="setupGuideModal" style="display: none;">
+      <div class="modal setup-guide-modal">
+        <button class="modal-close-btn" id="closeSetupGuideBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <div class="setup-guide-header">
+          <div class="setup-guide-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+            </svg>
+          </div>
+          <h3 class="setup-guide-title">Setup Two-Way Sync</h3>
+          <p class="setup-guide-subtitle">
+            Follow these steps to enable pushing data to Google Drive
+          </p>
+        </div>
+
+        <div class="setup-guide-content">
+          <div class="setup-step">
+            <div class="setup-step-number">1</div>
+            <div class="setup-step-content">
+              <h4>Create a Google Apps Script</h4>
+              <p>Go to <a href="https://script.google.com" target="_blank" rel="noopener noreferrer">script.google.com</a> and click <strong>New Project</strong></p>
+            </div>
+          </div>
+
+          <div class="setup-step">
+            <div class="setup-step-number">2</div>
+            <div class="setup-step-content">
+              <h4>Paste the Script</h4>
+              <p>Delete the default code and paste this script:</p>
+              <div class="code-block">
+                <button class="copy-code-btn" id="copyScriptBtn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                  <span id="copyBtnText">Copy Script</span>
+                </button>
+                <pre class="code-content" id="scriptCode"></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-step">
+            <div class="setup-step-number">3</div>
+            <div class="setup-step-content">
+              <h4>Deploy as Web App</h4>
+              <ol class="setup-sub-steps">
+                <li>Click <strong>Deploy</strong> → <strong>New deployment</strong></li>
+                <li>Select type: <strong>Web app</strong></li>
+                <li>Execute as: <strong>Me</strong></li>
+                <li>Who has access: <strong>Anyone</strong></li>
+                <li>Click <strong>Deploy</strong> and authorize</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="setup-step">
+            <div class="setup-step-number">4</div>
+            <div class="setup-step-content">
+              <h4>Copy the Web App URL</h4>
+              <p>Copy the URL that looks like:<br>
+              <code>https://script.google.com/macros/s/.../exec</code></p>
+              <p>Paste it in the "Write Endpoint" field above.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-guide-footer">
+          <button class="setup-guide-done-btn" id="doneSetupGuideBtn">Got it!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast" style="display: none;">
+      <div class="toast-icon" id="toastIcon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      </div>
+      <span class="toast-message" id="toastMessage"></span>
+    </div>
+  </div>
+
+  <script type="module" src="js/options.js"></script>
+</body>
+</html>
+
