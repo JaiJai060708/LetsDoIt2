@@ -15,9 +15,22 @@
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 24px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
+}
+
+.headerContent > :first-child {
+  justify-self: start;
+}
+
+.headerContent > :nth-child(2) {
+  justify-self: center;
+}
+
+.headerContent > :last-child {
+  justify-self: end;
 }
 
 
@@ -35,6 +48,7 @@
 
   .headerContent {
     padding: 0 12px;
+    gap: 12px;
   }
 
   .main {
@@ -49,6 +63,7 @@
 
   .headerContent {
     padding: 0 8px;
+    gap: 8px;
   }
 
   .main {

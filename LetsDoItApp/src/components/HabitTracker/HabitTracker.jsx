@@ -46,7 +46,7 @@ function RecentEntry({ habit }) {
   );
 }
 
-function HabitTracker() {
+function HabitTracker({ headerAction }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [habits, setHabits] = useState([]);
@@ -133,21 +133,28 @@ function HabitTracker() {
 
       {/* Quick Actions */}
       <div className={styles.quickActions}>
-        {todayEntry ? (
-          <div className={styles.todayStatus}>
-            <span className={styles.todayLabel}>Today:</span>
-            <div
-              className={styles.todayEntry}
-              style={{ backgroundColor: scoreToColor(todayEntry.score) }}
-              onClick={handleQuickLog}
-            >
-              {scoreToEmoji(todayEntry.score)} {scoreToLabel(todayEntry.score)}
+        <div className={styles.quickActionsLeft}>
+          {todayEntry ? (
+            <div className={styles.todayStatus}>
+              <span className={styles.todayLabel}>Today:</span>
+              <div
+                className={styles.todayEntry}
+                style={{ backgroundColor: scoreToColor(todayEntry.score) }}
+                onClick={handleQuickLog}
+              >
+                {scoreToEmoji(todayEntry.score)} {scoreToLabel(todayEntry.score)}
+              </div>
             </div>
+          ) : (
+            <button className={styles.logButton} onClick={handleQuickLog}>
+              ✨ Log Today&apos;s Mood
+            </button>
+          )}
+        </div>
+        {headerAction && (
+          <div className={styles.quickActionsRight}>
+            {headerAction}
           </div>
-        ) : (
-          <button className={styles.logButton} onClick={handleQuickLog}>
-            ✨ Log Today's Mood
-          </button>
         )}
       </div>
 

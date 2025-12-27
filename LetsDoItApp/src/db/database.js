@@ -109,6 +109,7 @@ export async function createTask(task) {
     updatedAt: new Date().toISOString(),
   };
   await db.add(TASKS_STORE, newTask);
+  await updateLocalDataTimestamp();
   return newTask;
 }
 
@@ -128,6 +129,7 @@ export async function updateTask(id, updates) {
     updatedAt: new Date().toISOString(),
   };
   await db.put(TASKS_STORE, updatedTask);
+  await updateLocalDataTimestamp();
   return updatedTask;
 }
 
@@ -137,6 +139,7 @@ export async function updateTask(id, updates) {
 export async function deleteTask(id) {
   const db = await initDB();
   await db.delete(TASKS_STORE, id);
+  await updateLocalDataTimestamp();
   return id;
 }
 
@@ -346,6 +349,7 @@ export async function upsertHabit(habitData) {
       updatedAt: new Date().toISOString(),
     };
     await db.put(HABITS_STORE, updated);
+    await updateLocalDataTimestamp();
     return updated;
   } else {
     // Create new
@@ -357,6 +361,7 @@ export async function upsertHabit(habitData) {
       updatedAt: new Date().toISOString(),
     };
     await db.add(HABITS_STORE, newEntry);
+    await updateLocalDataTimestamp();
     return newEntry;
   }
 }
@@ -367,6 +372,7 @@ export async function upsertHabit(habitData) {
 export async function deleteHabit(id) {
   const db = await ensureHabitsStore();
   await db.delete(HABITS_STORE, id);
+  await updateLocalDataTimestamp();
   return id;
 }
 
@@ -394,6 +400,440 @@ export async function getHabitStats(year) {
     average: scores.length > 0 ? (sum / scores.length).toFixed(1) : 0,
     best: Math.max(...scores),
     worst: Math.min(...scores),
+  };
+}
+
+// ============================================
+// Data Management Functions (Export/Import/Delete)
+// ============================================
+
+/**
+ * Export all data from the database
+ * Returns an object containing all tasks, settings, and habits
+ */
+export async function exportAllData() {
+  const db = await initDB();
+  
+  const tasks = await db.getAll(TASKS_STORE);
+  const habits = await db.getAll(HABITS_STORE);
+  const localModifiedAt = await getLocalDataModifiedAt();
+  
+  // Get all settings
+  const settingsKeys = ['availableTags', 'sectionExpandStates'];
+  const settings = {};
+  for (const key of settingsKeys) {
+    const value = await getSetting(key);
+    if (value !== undefined) {
+      settings[key] = value;
+    }
+  }
+  
+  return {
+    version: DB_VERSION,
+    exportedAt: new Date().toISOString(),
+    localModifiedAt: localModifiedAt, // Include sync timestamp
+    data: {
+      tasks,
+      habits,
+      settings,
+    },
+  };
+}
+
+/**
+ * Import data from a backup file
+ * Replaces all existing data with the imported data
+ */
+export async function importAllData(importData) {
+  if (!importData || !importData.data) {
+    throw new Error('Invalid import data format');
+  }
+  
+  const { tasks = [], habits = [], settings = {} } = importData.data;
+  const db = await initDB();
+  
+  // Clear existing data
+  await db.clear(TASKS_STORE);
+  await db.clear(HABITS_STORE);
+  
+  // Import tasks
+  const tx1 = db.transaction(TASKS_STORE, 'readwrite');
+  for (const task of tasks) {
+    await tx1.store.put(task);
+  }
+  await tx1.done;
+  
+  // Import habits
+  const tx2 = db.transaction(HABITS_STORE, 'readwrite');
+  for (const habit of habits) {
+    await tx2.store.put(habit);
+  }
+  await tx2.done;
+  
+  // Import settings
+  for (const [key, value] of Object.entries(settings)) {
+    await setSetting(key, value);
+  }
+  
+  return {
+    tasksImported: tasks.length,
+    habitsImported: habits.length,
+    settingsImported: Object.keys(settings).length,
+  };
+}
+
+/**
+ * Delete all data from the database
+ * This action is irreversible!
+ */
+export async function deleteAllData() {
+  const db = await initDB();
+  
+  // Clear all stores
+  await db.clear(TASKS_STORE);
+  await db.clear(HABITS_STORE);
+  await db.clear(SETTINGS_STORE);
+  
+  // Re-initialize default tags
+  await setSetting('availableTags', DEFAULT_TAGS);
+  
+  return { success: true };
+}
+
+// ============================================
+// Local Data Timestamp Tracking
+// ============================================
+
+/**
+ * Get the timestamp of when local data was last modified
+ */
+export async function getLocalDataModifiedAt() {
+  const timestamp = await getSetting('localDataModifiedAt');
+  return timestamp || null;
+}
+
+/**
+ * Update the local data modification timestamp
+ * Called whenever tasks or habits are created, updated, or deleted
+ */
+export async function updateLocalDataTimestamp() {
+  const timestamp = new Date().toISOString();
+  await setSetting('localDataModifiedAt', timestamp);
+  return timestamp;
+}
+
+// ============================================
+// Google Drive Sync Functions
+// ============================================
+
+// Sync result types
+export const SYNC_RESULT = {
+  PULLED: 'pulled',      // Remote was newer, pulled data
+  PUSHED: 'pushed',      // Local was newer, pushed data
+  UP_TO_DATE: 'upToDate', // Already in sync
+  ERROR: 'error',
+};
+
+/**
+ * Get Google Drive sync settings
+ */
+export async function getGoogleDriveSyncSettings() {
+  const settings = await getSetting('googleDriveSync');
+  return settings || {
+    enabled: false,
+    shareLink: '',
+    writeEndpoint: '', // Google Apps Script Web App URL for writing
+    lastSyncAt: null,
+    autoSync: false,
+  };
+}
+
+/**
+ * Save Google Drive sync settings
+ */
+export async function setGoogleDriveSyncSettings(settings) {
+  const current = await getGoogleDriveSyncSettings();
+  const updated = { ...current, ...settings };
+  await setSetting('googleDriveSync', updated);
+  return updated;
+}
+
+/**
+ * Convert a Google Drive share link to a direct download URL
+ * Handles formats like:
+ * - https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+ * - https://drive.google.com/open?id=FILE_ID
+ */
+export function convertGoogleDriveLinkToDirectUrl(shareLink) {
+  if (!shareLink) return null;
+  
+  let url = shareLink.trim();
+  
+  // Extract file ID from various Google Drive URL formats
+  let fileId = null;
+  
+  // Format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileMatch) {
+    fileId = fileMatch[1];
+  }
+  
+  // Format: https://drive.google.com/open?id=FILE_ID
+  if (!fileId) {
+    const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (openMatch) {
+      fileId = openMatch[1];
+    }
+  }
+  
+  // Format: https://drive.google.com/uc?id=FILE_ID&export=download (already direct)
+  if (!fileId) {
+    const ucMatch = url.match(/\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+    if (ucMatch) {
+      fileId = ucMatch[1];
+    }
+  }
+  
+  return fileId;
+}
+
+/**
+ * Extract file ID from Google Drive share link
+ */
+export function extractGoogleDriveFileId(shareLink) {
+  return convertGoogleDriveLinkToDirectUrl(shareLink);
+}
+
+/**
+ * Fetch with timeout wrapper and cache-busting
+ */
+async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      // Disable caching
+      cache: 'no-store',
+      headers: {
+        ...options.headers,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+      },
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
+    throw error;
+  }
+}
+
+/**
+ * Fetch data from a Google Drive shared file
+ * Uses multiple CORS proxies with fallback for reliability
+ * Includes cache-busting to always get fresh data
+ */
+export async function fetchFromGoogleDrive(shareLink) {
+  const fileId = extractGoogleDriveFileId(shareLink);
+  
+  if (!fileId) {
+    throw new Error('Invalid Google Drive share link');
+  }
+  
+  // Add cache-busting timestamp to the URL
+  const cacheBuster = Date.now();
+  const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}&_cb=${cacheBuster}`;
+  
+  // List of CORS proxies to try (in order of preference)
+  // Each proxy URL includes a cache-buster parameter
+  const corsProxies = [
+    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}&_t=${cacheBuster}`,
+    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&_t=${cacheBuster}`,
+    (url) => `https://cors-anywhere.herokuapp.com/${url}`,
+  ];
+  
+  let lastError = null;
+  
+  // Try each proxy until one works
+  for (const proxyFn of corsProxies) {
+    const proxyUrl = proxyFn(directUrl);
+    
+    try {
+      console.log(`Trying CORS proxy: ${proxyUrl.split('?')[0]}... (cache-buster: ${cacheBuster})`);
+      const response = await fetchWithTimeout(proxyUrl, {}, 20000);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const text = await response.text();
+      
+      // Check if we got an HTML error page instead of JSON
+      if (text.trim().startsWith('<!') || text.trim().startsWith('<html')) {
+        throw new Error('Received HTML instead of JSON - file may not be publicly accessible');
+      }
+      
+      // Try to parse as JSON
+      try {
+        const data = JSON.parse(text);
+        console.log('Successfully fetched fresh data from Google Drive');
+        return data;
+      } catch (e) {
+        throw new Error('Failed to parse response as JSON');
+      }
+    } catch (error) {
+      console.warn(`Proxy failed: ${error.message}`);
+      lastError = error;
+      // Continue to next proxy
+    }
+  }
+  
+  // All proxies failed
+  throw new Error(`Failed to fetch from Google Drive after trying all proxies. Last error: ${lastError?.message || 'Unknown error'}. Make sure the file is shared publicly ("Anyone with the link can view").`);
+}
+
+/**
+ * Push data to Google Drive using a Google Apps Script Web App
+ * The web app URL should be set in writeEndpoint setting
+ */
+export async function pushToGoogleDrive() {
+  const settings = await getGoogleDriveSyncSettings();
+  
+  if (!settings.writeEndpoint) {
+    throw new Error('No write endpoint configured. Please set up a Google Apps Script Web App.');
+  }
+  
+  // Export all local data
+  const exportData = await exportAllData();
+  
+  // Add sync metadata
+  const syncData = {
+    ...exportData,
+    syncedAt: new Date().toISOString(),
+    localModifiedAt: await getLocalDataModifiedAt(),
+  };
+  
+  try {
+    const response = await fetch(settings.writeEndpoint, {
+      method: 'POST',
+      mode: 'no-cors', // Google Apps Script requires no-cors for POST
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(syncData),
+    });
+    
+    // Note: with no-cors mode, we can't read the response
+    // We'll assume success if no error is thrown
+    
+    // Update last sync timestamp
+    await setGoogleDriveSyncSettings({
+      lastSyncAt: new Date().toISOString(),
+    });
+    
+    return {
+      action: SYNC_RESULT.PUSHED,
+      timestamp: syncData.syncedAt,
+    };
+  } catch (error) {
+    console.error('Failed to push to Google Drive:', error);
+    throw new Error('Failed to push data to Google Drive: ' + error.message);
+  }
+}
+
+/**
+ * Sync data with Google Drive
+ * Compares local and remote timestamps and syncs accordingly:
+ * - If remote is newer: pull from Google Drive
+ * - If local is newer: push to Google Drive
+ * - If same: no action needed
+ */
+export async function syncFromGoogleDrive() {
+  const settings = await getGoogleDriveSyncSettings();
+  
+  if (!settings.shareLink) {
+    throw new Error('No Google Drive share link configured');
+  }
+  
+  // Fetch remote data
+  const remoteData = await fetchFromGoogleDrive(settings.shareLink);
+  
+  // Get timestamps
+  const localModifiedAt = await getLocalDataModifiedAt();
+  const remoteModifiedAt = remoteData.localModifiedAt || remoteData.syncedAt || remoteData.exportedAt;
+  
+  // Compare timestamps
+  const localTime = localModifiedAt ? new Date(localModifiedAt).getTime() : 0;
+  const remoteTime = remoteModifiedAt ? new Date(remoteModifiedAt).getTime() : 0;
+  
+  // If local is newer and we have a write endpoint, push
+  if (localTime > remoteTime && settings.writeEndpoint) {
+    console.log('Local data is newer, pushing to Google Drive...');
+    const result = await pushToGoogleDrive();
+    return {
+      action: SYNC_RESULT.PUSHED,
+      localTimestamp: localModifiedAt,
+      remoteTimestamp: remoteModifiedAt,
+    };
+  }
+  
+  // If remote is newer, pull
+  if (remoteTime > localTime) {
+    console.log('Remote data is newer, pulling from Google Drive...');
+    const importResult = await importAllData(remoteData);
+    
+    // Set the local modified timestamp to match the remote
+    // This prevents immediate re-sync
+    if (remoteModifiedAt) {
+      await setSetting('localDataModifiedAt', remoteModifiedAt);
+    }
+    
+    // Update last sync timestamp
+    await setGoogleDriveSyncSettings({
+      lastSyncAt: new Date().toISOString(),
+    });
+    
+    return {
+      action: SYNC_RESULT.PULLED,
+      tasksImported: importResult.tasksImported,
+      habitsImported: importResult.habitsImported,
+      localTimestamp: localModifiedAt,
+      remoteTimestamp: remoteModifiedAt,
+    };
+  }
+  
+  // If local is newer but no write endpoint, still report success but note that push isn't available
+  if (localTime > remoteTime && !settings.writeEndpoint) {
+    console.log('Local data is newer but no write endpoint configured');
+    // Update last sync timestamp anyway
+    await setGoogleDriveSyncSettings({
+      lastSyncAt: new Date().toISOString(),
+    });
+    
+    return {
+      action: SYNC_RESULT.UP_TO_DATE, // Can't push, so consider it up to date
+      localTimestamp: localModifiedAt,
+      remoteTimestamp: remoteModifiedAt,
+      note: 'Local data is newer. Configure write endpoint to enable push.',
+    };
+  }
+  
+  // Timestamps are equal or both null - already in sync
+  console.log('Data is already in sync');
+  await setGoogleDriveSyncSettings({
+    lastSyncAt: new Date().toISOString(),
+  });
+  
+  return {
+    action: SYNC_RESULT.UP_TO_DATE,
+    localTimestamp: localModifiedAt,
+    remoteTimestamp: remoteModifiedAt,
   };
 }
 

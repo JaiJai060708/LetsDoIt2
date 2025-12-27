@@ -1,0 +1,285 @@
+.container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.syncButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.1) 0%, rgba(52, 168, 83, 0.08) 100%);
+  border: 1px solid rgba(66, 133, 244, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #4285f4;
+}
+
+.syncButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.18) 0%, rgba(52, 168, 83, 0.12) 100%);
+  border-color: rgba(66, 133, 244, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.15);
+}
+
+.syncButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Icon styles */
+.syncButton svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+/* Label */
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* State: Syncing */
+.syncButton.syncing {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.15) 0%, rgba(66, 133, 244, 0.1) 100%);
+  border-color: rgba(66, 133, 244, 0.3);
+  color: #3b82f6;
+}
+
+.syncButton.syncing .syncIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* State: Pulled (downloaded from cloud) */
+.syncButton.pulled {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.08) 100%);
+  border-color: rgba(34, 197, 94, 0.25);
+  color: #16a34a;
+}
+
+.downloadIcon {
+  animation: downloadBounce 0.4s ease-out;
+}
+
+@keyframes downloadBounce {
+  0% { transform: translateY(-4px); opacity: 0; }
+  50% { transform: translateY(2px); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* State: Pushed (uploaded to cloud) */
+.syncButton.pushed {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #2563eb;
+}
+
+.uploadIcon {
+  animation: uploadBounce 0.4s ease-out;
+}
+
+@keyframes uploadBounce {
+  0% { transform: translateY(4px); opacity: 0; }
+  50% { transform: translateY(-2px); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* State: Up to date */
+.syncButton.upToDate {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.12) 0%, rgba(148, 163, 184, 0.08) 100%);
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #64748b;
+}
+
+.checkIcon {
+  animation: checkPop 0.3s ease-out;
+}
+
+@keyframes checkPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* State: Error */
+.syncButton.error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.08) 100%);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+  animation: shake 0.4s ease-in-out;
+}
+
+.errorIcon {
+  animation: errorPulse 0.5s ease-out;
+}
+
+@keyframes errorPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.15);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  75% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* Tooltip styles */
+.tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #e2e8f0;
+  max-width: 220px;
+  white-space: normal;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.tooltip::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  background: rgba(15, 23, 42, 0.95);
+  border-left: 1px solid rgba(71, 85, 105, 0.4);
+  border-top: 1px solid rgba(71, 85, 105, 0.4);
+  transform: rotate(45deg);
+}
+
+/* Tooltip variants */
+.tooltip.error {
+  background: rgba(127, 29, 29, 0.95);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fecaca;
+}
+
+.tooltip.error::before {
+  background: rgba(127, 29, 29, 0.95);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.tooltip.success {
+  background: rgba(20, 83, 45, 0.95);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #dcfce7;
+}
+
+.tooltip.success::before {
+  background: rgba(20, 83, 45, 0.95);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.tooltip.info {
+  background: rgba(30, 58, 138, 0.95);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #dbeafe;
+}
+
+.tooltip.info::before {
+  background: rgba(30, 58, 138, 0.95);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .syncButton {
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+
+  .syncButton svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .label {
+    font-size: 12px;
+  }
+
+  .tooltip {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .syncButton {
+    padding: 5px 10px;
+    gap: 6px;
+    border-radius: 6px;
+  }
+
+  .syncButton svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .label {
+    font-size: 11px;
+  }
+}

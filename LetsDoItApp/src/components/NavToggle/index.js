@@ -1,2 +1,2 @@
-export { default } from './NavToggle';
+export { default, SettingsButton } from './NavToggle';
 

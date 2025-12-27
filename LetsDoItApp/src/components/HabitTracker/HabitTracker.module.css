@@ -24,8 +24,20 @@
 /* Quick Actions */
 .quickActions {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 24px;
+  gap: 16px;
+}
+
+.quickActionsLeft {
+  display: flex;
+  align-items: center;
+}
+
+.quickActionsRight {
+  display: flex;
+  align-items: center;
 }
 
 .logButton {
@@ -386,6 +398,21 @@
 
   .title {
     font-size: 22px;
+  }
+
+  .quickActions {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .quickActionsLeft {
+    flex: 1;
+    min-width: fit-content;
+  }
+
+  .logButton {
+    padding: 12px 20px;
+    font-size: 14px;
   }
 
   .statsGrid {

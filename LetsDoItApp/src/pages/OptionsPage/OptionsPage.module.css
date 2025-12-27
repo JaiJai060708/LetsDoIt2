@@ -1,0 +1,1690 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background elements */
+.page::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(34, 197, 94, 0.06) 0%, transparent 50%);
+  animation: backgroundShift 20s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes backgroundShift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(2%, 2%) rotate(1deg); }
+  66% { transform: translate(-1%, 1%) rotate(-1deg); }
+}
+
+.header {
+  background: linear-gradient(135deg, rgba(74, 144, 217, 0.9) 0%, rgba(45, 108, 181, 0.95) 100%);
+  padding: 20px 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+.headerContent {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.headerContent > :first-child {
+  justify-self: start;
+}
+
+.headerContent > :nth-child(2) {
+  justify-self: center;
+}
+
+.headerContent > :last-child {
+  justify-self: end;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 48px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  width: 100%;
+  max-width: 720px;
+}
+
+.pageHeader {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.titleIcon {
+  font-size: 36px;
+}
+
+.pageSubtitle {
+  font-size: 16px;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Section Cards */
+.section {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.section:hover {
+  border-color: rgba(71, 85, 105, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.sectionIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.sectionIcon.link {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.sectionIcon.export {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.sectionIcon.import {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.sectionIcon.danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.sectionIcon.googleDrive {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.2) 0%, rgba(52, 168, 83, 0.2) 100%);
+  border: 1px solid rgba(66, 133, 244, 0.3);
+  color: #4285f4;
+}
+
+.sectionTitleGroup {
+  flex: 1;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 4px;
+}
+
+.sectionDescription {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Sync Status Badge */
+.syncStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4ade80;
+}
+
+.syncDot {
+  width: 8px;
+  height: 8px;
+  background: #4ade80;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Google Drive Sync Section - Professional Design */
+.cloudSection {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(66, 133, 244, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.cloudSection::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(66, 133, 244, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cloudSectionHeader {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 24px;
+}
+
+.cloudBrandRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cloudLogo {
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cloudLogo svg {
+  width: 28px;
+  height: 28px;
+}
+
+.cloudTitleArea {
+  flex: 1;
+}
+
+.cloudTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
+
+.cloudSubtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cloudStatusBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4ade80;
+}
+
+.cloudStatusIcon {
+  width: 18px;
+  height: 18px;
+  background: rgba(34, 197, 94, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cloudStatusIcon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.cloudContent {
+  position: relative;
+  z-index: 1;
+}
+
+/* Setup State */
+.cloudSetup {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cloudInstructionCard {
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(66, 133, 244, 0.08);
+  border: 1px solid rgba(66, 133, 244, 0.15);
+  border-radius: 12px;
+}
+
+.cloudInstructionIcon {
+  width: 36px;
+  height: 36px;
+  background: rgba(66, 133, 244, 0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #60a5fa;
+}
+
+.cloudInstructionIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.cloudInstructionText {
+  flex: 1;
+}
+
+.cloudInstructionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 8px;
+}
+
+.cloudInstructionSteps {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.7;
+}
+
+.cloudInstructionSteps li {
+  padding-left: 4px;
+}
+
+.cloudInstructionSteps li::marker {
+  color: #4285f4;
+}
+
+.cloudInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cloudInputIcon {
+  position: absolute;
+  left: 14px;
+  width: 20px;
+  height: 20px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.cloudInputIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.cloudInput {
+  width: 100%;
+  padding: 14px 16px 14px 46px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.cloudInput::placeholder {
+  color: #64748b;
+}
+
+.cloudInput:focus {
+  outline: none;
+  border-color: rgba(66, 133, 244, 0.6);
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.15);
+}
+
+/* Advanced settings toggle */
+.cloudAdvancedToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cloudAdvancedToggle:hover {
+  background: rgba(71, 85, 105, 0.1);
+  border-color: rgba(71, 85, 105, 0.5);
+  color: #e2e8f0;
+}
+
+.cloudAdvancedToggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.cloudAdvancedToggle svg.rotated {
+  transform: rotate(90deg);
+}
+
+.cloudAdvancedPanel {
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cloudAdvancedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cloudAdvancedNote {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.cloudSetupGuideBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #60a5fa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cloudSetupGuideBtn:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0.15) 100%);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.cloudSetupGuideBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.cloudSetupActions {
+  display: flex;
+  gap: 12px;
+}
+
+.cloudConnectBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #4285f4 0%, #2563eb 100%);
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+}
+
+.cloudConnectBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
+}
+
+.cloudConnectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cloudConnectBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.cloudCancelBtn {
+  padding: 14px 24px;
+  background: transparent;
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cloudCancelBtn:hover {
+  background: rgba(71, 85, 105, 0.2);
+  color: #e2e8f0;
+}
+
+/* Connected State */
+.cloudConnected {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cloudFileCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.4) 100%);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 14px;
+}
+
+.cloudFileIcon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.2) 0%, rgba(66, 133, 244, 0.1) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #60a5fa;
+}
+
+.cloudFileIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.cloudFileInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.cloudFileName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 4px;
+}
+
+.cloudFileLink {
+  font-size: 12px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  color: #64748b;
+  margin: 0;
+  word-break: break-all;
+}
+
+.cloudEditBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(71, 85, 105, 0.2);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.cloudEditBtn:hover {
+  background: rgba(71, 85, 105, 0.4);
+  color: #e2e8f0;
+  transform: scale(1.05);
+}
+
+.cloudEditBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Sync Panel */
+.cloudSyncPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.08) 0%, rgba(34, 197, 94, 0.05) 100%);
+  border: 1px solid rgba(66, 133, 244, 0.15);
+  border-radius: 14px;
+  flex-wrap: wrap;
+}
+
+.cloudSyncInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cloudSyncTimestamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.cloudSyncTimestamp svg {
+  width: 16px;
+  height: 16px;
+  color: #64748b;
+}
+
+.cloudSyncTimestamp strong {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.cloudAutoSync {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cloudAutoSync input {
+  display: none;
+}
+
+.cloudAutoSyncSlider {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: rgba(71, 85, 105, 0.5);
+  border-radius: 11px;
+  transition: all 0.25s ease;
+}
+
+.cloudAutoSyncSlider::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: #94a3b8;
+  border-radius: 50%;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cloudAutoSync input:checked + .cloudAutoSyncSlider {
+  background: linear-gradient(135deg, #4285f4 0%, #2563eb 100%);
+}
+
+.cloudAutoSync input:checked + .cloudAutoSyncSlider::before {
+  transform: translateX(18px);
+  background: white;
+}
+
+.cloudAutoSyncLabel {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.cloudSyncBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #4285f4 0%, #2563eb 100%);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+}
+
+.cloudSyncBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(66, 133, 244, 0.4);
+}
+
+.cloudSyncBtn:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.cloudSyncBtn.syncing {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.cloudSyncIcon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+.cloudSyncBtn.syncing .cloudSyncIcon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.cloudDisconnectBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #f87171;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.cloudDisconnectBtn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.cloudDisconnectBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* App Links Section */
+.appLinksGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.appCard {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.appCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.appCard:hover::before {
+  opacity: 1;
+}
+
+.appCard:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.appCard.linked {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.appCard.linked:hover {
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.appIconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  position: relative;
+  font-size: 28px;
+}
+
+.appIconWrapper.calendar {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.appIconWrapper.reminders {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.appIconWrapper.notion {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+.appIconWrapper.slack {
+  background: linear-gradient(135deg, #4a154b 0%, #611f69 100%);
+}
+
+.appIconWrapper.trello {
+  background: linear-gradient(135deg, #0079bf 0%, #026aa7 100%);
+}
+
+.appIconWrapper.github {
+  background: linear-gradient(135deg, #24292e 0%, #1b1f23 100%);
+}
+
+.linkedBadge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(30, 41, 59, 0.9);
+}
+
+.linkedBadge svg {
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+.appName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 4px;
+}
+
+.appStatus {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+.appStatus.linked {
+  color: #4ade80;
+}
+
+.addAppButton {
+  background: rgba(15, 23, 42, 0.5);
+  border: 2px dashed rgba(71, 85, 105, 0.4);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.addAppButton:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.05);
+  color: #94a3b8;
+}
+
+.addAppButton svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+
+.addAppButton span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Data Actions */
+.dataActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.actionButton:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(71, 85, 105, 0.5);
+  transform: translateX(4px);
+}
+
+.actionButton.export:hover {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.actionButton.import:hover {
+  border-color: rgba(249, 115, 22, 0.5);
+}
+
+.actionIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.actionIcon.export {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.actionIcon.import {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+}
+
+.actionIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.actionContent {
+  flex: 1;
+}
+
+.actionTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 2px;
+}
+
+.actionDescription {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.actionArrow {
+  color: #475569;
+  transition: transform 0.2s ease;
+}
+
+.actionButton:hover .actionArrow {
+  transform: translateX(4px);
+  color: #64748b;
+}
+
+/* Danger Zone */
+.dangerZone {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(30, 41, 59, 0.5);
+}
+
+.dangerZone:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #f87171;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.deleteButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.deleteButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Confirmation Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 440px;
+  padding: 32px;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modalIcon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: rgba(239, 68, 68, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.modalTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 12px;
+}
+
+.modalDescription {
+  font-size: 15px;
+  color: #94a3b8;
+  margin: 0 0 28px;
+  line-height: 1.6;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+}
+
+.modalCancelBtn {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(71, 85, 105, 0.3);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalCancelBtn:hover {
+  background: rgba(71, 85, 105, 0.5);
+  color: #e2e8f0;
+}
+
+.modalDeleteBtn {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.modalDeleteBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(71, 85, 105, 0.3);
+  border: none;
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(71, 85, 105, 0.5);
+  color: #e2e8f0;
+}
+
+.modalCloseBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Setup Guide Modal */
+.setupGuideModal {
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  text-align: left;
+  padding: 0;
+}
+
+.setupGuideHeader {
+  padding: 28px 28px 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.setupGuideIcon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+}
+
+.setupGuideIcon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.setupGuideTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 8px;
+}
+
+.setupGuideSubtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.setupGuideContent {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.setupStep {
+  display: flex;
+  gap: 14px;
+}
+
+.setupStepNumber {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.setupStepContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.setupStepContent h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 6px;
+}
+
+.setupStepContent p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.setupStepContent a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.setupStepContent a:hover {
+  text-decoration: underline;
+}
+
+.setupSubSteps {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.8;
+}
+
+.setupSubSteps li {
+  padding-left: 4px;
+}
+
+.setupStepContent code {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(59, 130, 246, 0.15);
+  border-radius: 4px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  color: #93c5fd;
+  word-break: break-all;
+}
+
+.codeBlock {
+  margin-top: 12px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.copyCodeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(71, 85, 105, 0.2);
+  border: none;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copyCodeBtn:hover {
+  background: rgba(71, 85, 105, 0.4);
+  color: #e2e8f0;
+}
+
+.copyCodeBtn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.codeContent {
+  margin: 0;
+  padding: 14px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #a5b4fc;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.setupGuideFooter {
+  padding: 20px 28px;
+  border-top: 1px solid rgba(71, 85, 105, 0.3);
+  display: flex;
+  justify-content: center;
+}
+
+.setupGuideDoneBtn {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.setupGuideDoneBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 14px 24px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1001;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast.hiding {
+  animation: toastOut 0.2s ease forwards;
+}
+
+@keyframes toastIn {
+  from {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastOut {
+  from {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+}
+
+.toastIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toastIcon.success {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.toastIcon.error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.toastIcon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.toastMessage {
+  font-size: 14px;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+
+/* Hidden file input */
+.hiddenInput {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    padding: 10px 0;
+  }
+
+  .headerContent {
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .main {
+    padding: 24px 16px;
+  }
+
+  .pageTitle {
+    font-size: 26px;
+  }
+
+  .section {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .appLinksGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 8px 0;
+  }
+
+  .headerContent {
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  .main {
+    padding: 16px 12px;
+  }
+
+  .pageHeader {
+    margin-bottom: 24px;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .titleIcon {
+    font-size: 28px;
+  }
+
+  .pageSubtitle {
+    font-size: 14px;
+  }
+
+  .section {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .sectionIcon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .appLinksGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .appCard {
+    padding: 16px 12px;
+  }
+
+  .appIconWrapper {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .actionButton {
+    padding: 14px 16px;
+  }
+
+  .modal {
+    padding: 24px 20px;
+    width: 95%;
+  }
+
+  /* Google Drive responsive */
+  .cloudBrandRow {
+    flex-wrap: wrap;
+  }
+
+  .cloudStatusBadge {
+    margin-top: 12px;
+    margin-left: auto;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cloudInstructionCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cloudSetupActions {
+    flex-direction: column;
+  }
+
+  .cloudConnectBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cloudSyncPanel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cloudSyncInfo {
+    width: 100%;
+  }
+
+  .cloudSyncBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cloudAutoSync {
+    justify-content: space-between;
+  }
+
+  .cloudAdvancedHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cloudSetupGuideBtn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .setupGuideModal {
+    max-width: 95%;
+    max-height: 90vh;
+  }
+
+  .setupGuideHeader {
+    padding: 20px 20px 16px;
+  }
+
+  .setupGuideContent {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .setupStep {
+    gap: 12px;
+  }
+
+  .setupStepNumber {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .codeContent {
+    font-size: 10px;
+    padding: 12px;
+  }
+
+  .setupGuideFooter {
+    padding: 16px 20px;
+  }
+}
+

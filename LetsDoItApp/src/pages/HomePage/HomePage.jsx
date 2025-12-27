@@ -2,8 +2,9 @@ import { useState, useCallback } from 'react';
 import DailyTaskList from '../../components/DailyTaskList';
 import WeeklyTaskList from '../../components/WeeklyTaskList';
 import TaskModal from '../../components/TaskModal';
-import NavToggle from '../../components/NavToggle';
+import NavToggle, { SettingsButton } from '../../components/NavToggle';
 import TodoViewToggle from '../../components/TodoViewToggle';
+import SyncButton from '../../components/SyncButton';
 import Logo from '../../components/Logo';
 import styles from './HomePage.module.css';
 
@@ -30,20 +31,27 @@ function HomePage() {
     setSelectedTask(null);
   };
 
+  const handleSyncComplete = useCallback((result) => {
+    console.log('Sync complete:', result);
+    // Trigger refresh after sync
+    setRefreshKey((prev) => prev + 1);
+  }, []);
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <Logo />
           <NavToggle />
+          <SettingsButton />
         </div>
       </header>
 
       <main className={styles.main}>
         <div className={`${styles.todoContainer} ${isWeekly ? styles.weekly : ''}`}>
           <div className={styles.todoHeader}>
-            <h2 className={styles.todoTitle}>To Do</h2>
             <TodoViewToggle isWeekly={isWeekly} onToggle={handleToggleView} />
+            <SyncButton onSyncComplete={handleSyncComplete} />
           </div>
           
           {isWeekly ? (
