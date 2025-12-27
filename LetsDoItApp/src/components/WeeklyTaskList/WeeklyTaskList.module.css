@@ -378,6 +378,34 @@
   border-top: 1px solid var(--border-light);
 }
 
+.keyboardOpen {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.keyboardOpen .header,
+.keyboardOpen .weekContainer {
+  display: none;
+}
+
+.keyboardOpen .footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--bg-page);
+  border-top: none;
+}
+
+.keyboardOpen .footer form {
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--card-border);
+}
+
 @media (max-width: 768px) {
   .footer {
     position: sticky;
@@ -387,10 +415,19 @@
     border-radius: 0 0 10px 10px;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
   }
+
+  .keyboardOpen .footer {
+    position: fixed;
+    border-radius: 0;
+  }
 }
 
 @media (max-width: 480px) {
   .footer {
     border-radius: 0 0 8px 8px;
+  }
+
+  .keyboardOpen .footer {
+    padding: 6px 12px calc(10px + env(safe-area-inset-bottom));
   }
 }
