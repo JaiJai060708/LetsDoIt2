@@ -182,24 +182,3 @@
 .dateInput:focus {
   border-color: var(--primary-color);
 }
-
-.footer {
-  padding: 14px 20px;
-  border-top: 1px solid var(--border-light);
-  display: flex;
-  justify-content: center;
-}
-
-.saving {
-  font-size: 13px;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.saved {
-  font-size: 13px;
-  color: var(--success);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}

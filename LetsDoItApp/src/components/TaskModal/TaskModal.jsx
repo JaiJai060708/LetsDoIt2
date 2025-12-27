@@ -10,12 +10,10 @@ function TaskModal({ task, onClose, onUpdate }) {
   const [dueDate, setDueDate] = useState(formatDateForInput(task.dueDate));
   const [isSomeday, setIsSomeday] = useState(!task.dueDate);
   const [tags, setTags] = useState(task.tags || []);
-  const [isSaving, setIsSaving] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState(null);
 
   // Auto-save functionality
   const saveChanges = useCallback(async () => {
-    setIsSaving(true);
     try {
       // Parse date as local noon to avoid timezone issues
       // new Date("YYYY-MM-DD") is parsed as UTC midnight, which can shift to previous day in timezones behind UTC
@@ -30,8 +28,6 @@ function TaskModal({ task, onClose, onUpdate }) {
       onUpdate();
     } catch (error) {
       console.error('Failed to save task:', error);
-    } finally {
-      setIsSaving(false);
     }
   }, [task.id, content, note, dueDate, isSomeday, tags, onUpdate]);
 
@@ -161,14 +157,6 @@ function TaskModal({ task, onClose, onUpdate }) {
             />
           </div>
         </div>
-
-        <footer className={styles.footer}>
-          {isSaving ? (
-            <span className={styles.saving}>Saving...</span>
-          ) : (
-            <span className={styles.saved}>✓ Saved</span>
-          )}
-        </footer>
       </div>
     </div>
   );
