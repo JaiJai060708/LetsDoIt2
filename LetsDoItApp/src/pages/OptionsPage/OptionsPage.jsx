@@ -31,7 +31,7 @@ function OptionsPage() {
   const [toast, setToast] = useState(null);
   
   // Use theme context
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, refreshTimezone } = useTheme();
   
   // Use sync context
   const { syncState, triggerSync, refreshSyncSettings } = useSync();
@@ -107,6 +107,8 @@ function OptionsPage() {
   const handleTimezoneChange = async (newTimezone) => {
     await setDeviceTimezone(newTimezone);
     setDeviceTimezoneState(newTimezone);
+    // Refresh the theme context's timezone so auto theme follows the new timezone
+    await refreshTimezone();
     showToast(`Timezone changed to ${newTimezone}`);
   };
 
