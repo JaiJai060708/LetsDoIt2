@@ -1,19 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { updateTask, deleteTask, getAvailableTags } from '../../db/database';
-import { isPast, isToday, isTomorrow } from '../../utils/dateUtils';
+import { isPast, isToday, isTomorrow, parseDateString } from '../../utils/dateUtils';
 import styles from './Task.module.css';
 
 // Parse date string to local date (avoids timezone issues with YYYY-MM-DD format)
 const parseLocalDate = (dateStr) => {
-  if (!dateStr) return null;
-  // If it's already a full ISO string, parse it normally
-  if (dateStr.includes('T')) {
-    return new Date(dateStr);
-  }
-  // For YYYY-MM-DD format, parse as local date to avoid timezone shift
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  return parseDateString(dateStr);
 };
 
 // Helper to format deadline display
@@ -87,7 +80,7 @@ function Task({ task, index, onUpdate, onSelect, isSelected, compact = false }) 
     onUpdate();
   };
 
-  const taskIsPast = task.dueDate && isPast(new Date(task.dueDate)) && !task.doneAt;
+  const taskIsPast = task.dueDate && isPast(parseLocalDate(task.dueDate)) && !task.doneAt;
   const noteUrl = extractUrl(task.note);
 
   return (

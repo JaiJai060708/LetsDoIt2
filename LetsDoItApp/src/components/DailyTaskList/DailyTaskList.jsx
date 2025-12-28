@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { addDays } from 'date-fns';
 import { getAllTasks, updateTask, getSectionExpandStates, setSectionExpandState, getHabitByDate, getAvailableTags } from '../../db/database';
-import { categorizeDailyTasks, sortTasks, getTodayStart, isToday, isTomorrow, isPast } from '../../utils/dateUtils';
+import { categorizeDailyTasks, sortTasks, getTodayDateString, addDaysToDateString, isToday, isTomorrow, isPast, parseDateString } from '../../utils/dateUtils';
 import { getTodayKey } from '../../utils/habitUtils';
 import TaskList from '../TaskList';
 import AddTask from '../AddTask';
@@ -33,6 +32,7 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [tagDeadlines, setTagDeadlines] = useState({ today: [], tomorrow: [], overdue: [] });
   const [isMobile, setIsMobile] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(null);
 
   // Load expand states from DB
   const loadExpandStates = useCallback(async () => {
@@ -58,12 +58,9 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     }
   }, []);
 
-  // Parse date string to local date (avoids timezone issues with YYYY-MM-DD format)
+  // Parse date string to local date (avoids timezone issues)
   const parseLocalDate = (dateStr) => {
-    if (!dateStr) return null;
-    if (dateStr.includes('T')) return new Date(dateStr);
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
+    return parseDateString(dateStr);
   };
 
   // Load tag deadlines
@@ -143,6 +140,7 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   useEffect(() => {
     if (!isMobile) {
       setIsKeyboardOpen(false);
+      setViewportHeight(null);
       return;
     }
 
@@ -154,23 +152,33 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
 
     const handleResize = () => {
       const height = viewport.height;
+      const offsetTop = viewport.offsetTop;
       const isOpen = baselineHeight - height > threshold;
+      
       setIsKeyboardOpen(isOpen);
-      if (!isOpen) {
+      
+      if (isOpen) {
+        // Calculate the bottom position above the keyboard
+        setViewportHeight(height + offsetTop);
+      } else {
+        setViewportHeight(null);
         baselineHeight = height;
       }
     };
 
     const handleOrientationChange = () => {
       baselineHeight = viewport.height;
+      setViewportHeight(null);
       handleResize();
     };
 
     viewport.addEventListener('resize', handleResize);
+    viewport.addEventListener('scroll', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
       viewport.removeEventListener('resize', handleResize);
+      viewport.removeEventListener('scroll', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, [isMobile]);
@@ -205,22 +213,22 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     }
   };
 
-  // Map droppable IDs to due dates
+  // Map droppable IDs to due dates (using date strings for timezone-agnostic storage)
   const getDueDateForDroppable = (droppableId) => {
-    const today = getTodayStart();
+    const todayStr = getTodayDateString();
     switch (droppableId) {
       case 'today':
-        return today.toISOString();
+        return todayStr;
       case 'tomorrow':
-        return addDays(today, 1).toISOString();
+        return addDaysToDateString(todayStr, 1);
       case 'upcoming':
-        return addDays(today, 7).toISOString();
+        return addDaysToDateString(todayStr, 7);
       case 'someday':
         return null;
       case 'unfinished':
-        return today.toISOString(); // Move overdue to today
+        return todayStr; // Move overdue to today
       default:
-        return today.toISOString();
+        return todayStr;
     }
   };
 
@@ -446,7 +454,10 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
         )}
       </div>
 
-      <div className={styles.addTaskWrapper}>
+      <div 
+        className={styles.addTaskWrapper}
+        style={viewportHeight ? { '--viewport-bottom': `${viewportHeight}px` } : undefined}
+      >
         <AddTask
           onTaskCreated={handleTaskCreated}
           compact={isMobile && isKeyboardOpen}

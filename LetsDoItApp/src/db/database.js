@@ -577,6 +577,108 @@ export async function updateLocalDataTimestamp() {
 }
 
 // ============================================
+// Device Timezone Settings (not synced)
+// ============================================
+
+/**
+ * Get the configured device timezone
+ * This is device-specific and NOT synced
+ * Returns IANA timezone string (e.g., 'America/Los_Angeles', 'Europe/Berlin')
+ */
+export async function getDeviceTimezone() {
+  const tz = await getSetting('deviceTimezone');
+  // Default to browser's timezone if not set
+  return tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
+ * Set the device timezone
+ * This is device-specific and NOT synced
+ * @param {string} timezone - IANA timezone string
+ */
+export async function setDeviceTimezone(timezone) {
+  await setSetting('deviceTimezone', timezone);
+  return timezone;
+}
+
+/**
+ * Get the current local date string (YYYY-MM-DD) in the configured timezone
+ */
+export async function getCurrentLocalDateString() {
+  const timezone = await getDeviceTimezone();
+  return formatDateInTimezone(new Date(), timezone);
+}
+
+/**
+ * Format a date to YYYY-MM-DD string in a specific timezone
+ * @param {Date} date - The date to format
+ * @param {string} timezone - IANA timezone string
+ * @returns {string} - YYYY-MM-DD formatted string
+ */
+export function formatDateInTimezone(date, timezone) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(date);
+}
+
+/**
+ * Create a UTC ISO string that preserves the local date meaning
+ * Stores as noon UTC to avoid date boundary issues
+ * @param {string} localDateStr - YYYY-MM-DD format
+ * @returns {object} - { utcTimestamp, localDate, timezone }
+ */
+export function createDateWithTimezone(localDateStr, timezone) {
+  // Store the local date string directly (this is the user's intent)
+  // Also store a UTC reference point (noon on that day in UTC)
+  // and the timezone for reference
+  const [year, month, day] = localDateStr.split('-').map(Number);
+  const utcNoon = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  
+  return {
+    utcTimestamp: utcNoon.toISOString(),
+    localDate: localDateStr,
+    timezone: timezone,
+  };
+}
+
+/**
+ * Extract the local date string from a stored date
+ * Handles both new format (with localDate) and legacy format (ISO string only)
+ * @param {string|object} storedDate - Either an ISO string or { utcTimestamp, localDate, timezone }
+ * @returns {string} - YYYY-MM-DD format
+ */
+export function extractLocalDate(storedDate) {
+  if (!storedDate) return null;
+  
+  // New format: object with localDate
+  if (typeof storedDate === 'object' && storedDate.localDate) {
+    return storedDate.localDate;
+  }
+  
+  // Legacy format: ISO string - extract the date part
+  // For legacy dates, we parse and format to get YYYY-MM-DD
+  if (typeof storedDate === 'string') {
+    // If it's already YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(storedDate)) {
+      return storedDate;
+    }
+    // ISO string - extract date portion, handling timezone
+    // We treat the stored time as the intended local date
+    const date = new Date(storedDate);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  return null;
+}
+
+// ============================================
 // Google Drive Sync Functions
 // ============================================
 

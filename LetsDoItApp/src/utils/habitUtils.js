@@ -1,4 +1,23 @@
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getYear, getMonth, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from 'date-fns';
+
+// ============================================
+// Timezone-aware habit date utilities
+// ============================================
+
+/**
+ * Get today's date as a YYYY-MM-DD string in a specific timezone
+ * @param {string} timezone - IANA timezone string (default: device timezone)
+ * @returns {string} - YYYY-MM-DD format
+ */
+export function getTodayKeyForTimezone(timezone = Intl.DateTimeFormat().resolvedOptions().timeZone) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(new Date());
+}
 
 /**
  * Convert a mood score (1-10) to a color
@@ -99,30 +118,40 @@ export function parseDateKey(dateStr) {
 
 /**
  * Get today's date key
+ * Uses the default device timezone for consistency
  */
 export function getTodayKey() {
-  return formatDateKey(new Date());
+  return getTodayKeyForTimezone();
 }
 
 /**
  * Check if a date is today
+ * @param {string} dateStr - YYYY-MM-DD format
+ * @param {string} timezone - Optional timezone (defaults to device timezone)
  */
-export function isToday(dateStr) {
-  return dateStr === getTodayKey();
+export function isToday(dateStr, timezone) {
+  const todayKey = timezone ? getTodayKeyForTimezone(timezone) : getTodayKey();
+  return dateStr === todayKey;
 }
 
 /**
  * Check if a date is in the past
+ * @param {string} dateStr - YYYY-MM-DD format
+ * @param {string} timezone - Optional timezone (defaults to device timezone)
  */
-export function isPastDate(dateStr) {
-  return dateStr < getTodayKey();
+export function isPastDate(dateStr, timezone) {
+  const todayKey = timezone ? getTodayKeyForTimezone(timezone) : getTodayKey();
+  return dateStr < todayKey;
 }
 
 /**
  * Check if a date is in the future
+ * @param {string} dateStr - YYYY-MM-DD format
+ * @param {string} timezone - Optional timezone (defaults to device timezone)
  */
-export function isFutureDate(dateStr) {
-  return dateStr > getTodayKey();
+export function isFutureDate(dateStr, timezone) {
+  const todayKey = timezone ? getTodayKeyForTimezone(timezone) : getTodayKey();
+  return dateStr > todayKey;
 }
 
 /**

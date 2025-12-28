@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { updateTask, deleteTask } from '../../db/database';
-import { formatDateForInput } from '../../utils/dateUtils';
+import { formatDateForInput, extractDateString, getTodayDateString } from '../../utils/dateUtils';
 import TagSelector from '../TagSelector';
 import styles from './TaskModal.module.css';
 
@@ -44,14 +44,11 @@ function TaskModal({ task, onClose, onUpdate }) {
   // Auto-save functionality
   const saveChanges = useCallback(async () => {
     try {
-      // Parse date as local noon to avoid timezone issues
-      // new Date("YYYY-MM-DD") is parsed as UTC midnight, which can shift to previous day in timezones behind UTC
-      // Using "YYYY-MM-DDT12:00:00" ensures it's parsed as local time and noon prevents any day shift
-      const parsedDueDate = dueDate ? new Date(dueDate + 'T12:00:00').toISOString() : null;
+      // Store dueDate directly as YYYY-MM-DD string (timezone-agnostic)
       await updateTask(task.id, {
         content,
         note: note || null,
-        dueDate: isSomeday ? null : parsedDueDate,
+        dueDate: isSomeday ? null : dueDate,
         tags,
       });
       onUpdate();
@@ -76,6 +73,7 @@ function TaskModal({ task, onClose, onUpdate }) {
   }, [content, note, dueDate, isSomeday, tags]);
 
   const handleToggleDone = async () => {
+    // Store doneAt as ISO string (includes timezone info for reference)
     const doneAt = task.doneAt ? null : new Date().toISOString();
     await updateTask(task.id, { doneAt });
     onUpdate();
@@ -97,7 +95,7 @@ function TaskModal({ task, onClose, onUpdate }) {
     const checked = e.target.checked;
     setIsSomeday(checked);
     if (!checked && !dueDate) {
-      setDueDate(formatDateForInput(new Date()));
+      setDueDate(getTodayDateString());
     }
   };
 
@@ -108,6 +106,17 @@ function TaskModal({ task, onClose, onUpdate }) {
 
   const handleExitEditingNote = () => {
     setIsEditingNote(false);
+  };
+
+  // Format doneAt for display
+  const formatDoneAt = (doneAtStr) => {
+    if (!doneAtStr) return '';
+    // Extract date string for display
+    const dateStr = extractDateString(doneAtStr);
+    if (!dateStr) return 'Unknown';
+    // Parse and format nicely
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString();
   };
 
   return (
@@ -148,7 +157,7 @@ function TaskModal({ task, onClose, onUpdate }) {
               </label>
               {task.doneAt && (
                 <span className={styles.doneDate}>
-                  Done on {new Date(task.doneAt).toLocaleDateString()}
+                  Done on {formatDoneAt(task.doneAt)}
                 </span>
               )}
             </div>
@@ -222,4 +231,3 @@ function TaskModal({ task, onClose, onUpdate }) {
 }
 
 export default TaskModal;
-

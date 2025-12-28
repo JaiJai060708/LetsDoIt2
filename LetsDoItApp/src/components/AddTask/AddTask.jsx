@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createTask, getAvailableTags, addTag, updateTag, deleteTag } from '../../db/database';
+import { extractDateString, getTodayDateString } from '../../utils/dateUtils';
 import styles from './AddTask.module.css';
 
 // Predefined color palette for tags
@@ -167,9 +168,14 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
     setIsSubmitting(true);
     
     try {
+      // Use date string format (YYYY-MM-DD) for timezone-agnostic date storage
+      const dueDateStr = defaultDueDate 
+        ? extractDateString(defaultDueDate)
+        : getTodayDateString();
+      
       const newTask = await createTask({
         content: trimmedContent,
-        dueDate: defaultDueDate ? defaultDueDate.toISOString() : new Date().toISOString(),
+        dueDate: dueDateStr,
         note: null,
         doneAt: null,
         tags: selectedTags,

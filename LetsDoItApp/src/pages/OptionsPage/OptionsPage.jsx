@@ -12,6 +12,8 @@ import {
   getGoogleDriveSyncSettings,
   setGoogleDriveSyncSettings,
   extractGoogleDriveFileId,
+  getDeviceTimezone,
+  setDeviceTimezone,
   SYNC_RESULT,
 } from '../../db/database';
 import styles from './OptionsPage.module.css';
@@ -54,8 +56,13 @@ function OptionsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const qrScannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
+  
+  // Timezone state (device-specific, not synced)
+  const [deviceTimezone, setDeviceTimezoneState] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
 
-  // Load Google Drive settings on mount
+  // Load Google Drive settings and timezone on mount
   useEffect(() => {
     const loadSettings = async () => {
       const googleDriveSettings = await getGoogleDriveSyncSettings();
@@ -65,6 +72,10 @@ function OptionsPage() {
       setGoogleDriveAutoSync(googleDriveSettings.autoSync || false);
       setGoogleDriveLastSyncAt(googleDriveSettings.lastSyncAt || null);
       setShowAdvancedSync(!!googleDriveSettings.writeEndpoint);
+      
+      // Load device timezone
+      const tz = await getDeviceTimezone();
+      setDeviceTimezoneState(tz);
     };
     loadSettings();
   }, []);
@@ -90,6 +101,90 @@ function OptionsPage() {
       return;
     }
     showToast(`Theme changed to ${newTheme === 'light' ? 'Day' : 'Night'} mode`);
+  };
+
+  // Timezone handler
+  const handleTimezoneChange = async (newTimezone) => {
+    await setDeviceTimezone(newTimezone);
+    setDeviceTimezoneState(newTimezone);
+    showToast(`Timezone changed to ${newTimezone}`);
+  };
+
+  // Get common timezone options
+  const getTimezoneOptions = () => {
+    const commonTimezones = [
+      // Americas
+      'America/New_York',
+      'America/Chicago',
+      'America/Denver',
+      'America/Los_Angeles',
+      'America/Anchorage',
+      'Pacific/Honolulu',
+      'America/Toronto',
+      'America/Vancouver',
+      'America/Mexico_City',
+      'America/Sao_Paulo',
+      'America/Buenos_Aires',
+      // Europe
+      'Europe/London',
+      'Europe/Paris',
+      'Europe/Berlin',
+      'Europe/Madrid',
+      'Europe/Rome',
+      'Europe/Amsterdam',
+      'Europe/Brussels',
+      'Europe/Vienna',
+      'Europe/Stockholm',
+      'Europe/Warsaw',
+      'Europe/Moscow',
+      // Asia
+      'Asia/Dubai',
+      'Asia/Kolkata',
+      'Asia/Bangkok',
+      'Asia/Singapore',
+      'Asia/Hong_Kong',
+      'Asia/Shanghai',
+      'Asia/Tokyo',
+      'Asia/Seoul',
+      // Oceania
+      'Australia/Sydney',
+      'Australia/Melbourne',
+      'Australia/Perth',
+      'Pacific/Auckland',
+      // Africa
+      'Africa/Cairo',
+      'Africa/Lagos',
+      'Africa/Johannesburg',
+    ];
+    
+    // Get current browser timezone and ensure it's in the list
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!commonTimezones.includes(browserTz)) {
+      commonTimezones.unshift(browserTz);
+    }
+    
+    // If current device timezone is different, add it too
+    if (!commonTimezones.includes(deviceTimezone)) {
+      commonTimezones.unshift(deviceTimezone);
+    }
+    
+    return [...new Set(commonTimezones)].sort();
+  };
+
+  // Format timezone for display
+  const formatTimezone = (tz) => {
+    try {
+      const now = new Date();
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        timeZoneName: 'short',
+      });
+      const parts = formatter.formatToParts(now);
+      const tzAbbr = parts.find(p => p.type === 'timeZoneName')?.value || '';
+      return `${tz.replace(/_/g, ' ')} (${tzAbbr})`;
+    } catch {
+      return tz;
+    }
   };
 
   const handleExport = async () => {
@@ -416,6 +511,40 @@ function OptionsPage() {
                   </svg>
                 </div>
               </button>
+            </div>
+
+            {/* Timezone Setting */}
+            <div className={styles.timezoneSection}>
+              <div className={styles.timezoneHeader}>
+                <div className={styles.timezoneIcon}>🌍</div>
+                <div className={styles.timezoneTitleGroup}>
+                  <h3 className={styles.timezoneTitle}>Device Timezone</h3>
+                  <p className={styles.timezoneDescription}>
+                    This setting is specific to this device and won&apos;t sync
+                  </p>
+                </div>
+              </div>
+              <div className={styles.timezoneSelector}>
+                <select
+                  className={styles.timezoneSelect}
+                  value={deviceTimezone}
+                  onChange={(e) => handleTimezoneChange(e.target.value)}
+                >
+                  {getTimezoneOptions().map((tz) => (
+                    <option key={tz} value={tz}>
+                      {formatTimezone(tz)}
+                    </option>
+                  ))}
+                </select>
+                <div className={styles.timezoneSelectIcon}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </div>
+              </div>
+              <p className={styles.timezoneNote}>
+                Tasks and habits will be shown based on this timezone. When syncing, dates are preserved across devices regardless of timezone.
+              </p>
             </div>
           </section>
 

@@ -251,6 +251,110 @@
   color: white;
 }
 
+/* Timezone Section */
+.timezoneSection {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-light);
+}
+
+.timezoneHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.timezoneIcon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.timezoneTitleGroup {
+  flex: 1;
+}
+
+.timezoneTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+}
+
+.timezoneDescription {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.timezoneSelector {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.timezoneSelect {
+  width: 100%;
+  padding: 12px 40px 12px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.timezoneSelect:hover {
+  border-color: var(--border-medium);
+}
+
+.timezoneSelect:focus {
+  outline: none;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.timezoneSelectIcon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timezoneSelectIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.timezoneNote {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+  padding: 10px 12px;
+  background: rgba(59, 130, 246, 0.06);
+  border-radius: 8px;
+  border-left: 3px solid rgba(59, 130, 246, 0.4);
+}
+
 /* Data Section */
 .dataSection {
   display: flex;

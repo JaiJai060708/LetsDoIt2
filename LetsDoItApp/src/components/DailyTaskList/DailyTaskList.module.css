@@ -323,16 +323,20 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 50;
-  padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
-  background: var(--bg-page);
+  top: calc(var(--viewport-bottom, 100vh) - 70px);
+  bottom: auto;
+  z-index: 1000;
+  padding: 0 12px;
+  background: transparent;
+  border-top: none;
+  transition: top 0.1s ease-out;
 }
 
 .keyboardOpen .addTaskWrapper form {
-  border-radius: 18px;
-  box-shadow: var(--shadow-lg);
+  border-radius: 16px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
   border: 1px solid var(--card-border);
+  background: var(--card-bg);
 }
 
 @media (max-width: 480px) {
@@ -347,6 +351,10 @@
   }
 
   .keyboardOpen .addTaskWrapper {
-    padding: 6px 12px calc(10px + env(safe-area-inset-bottom));
+    padding: 0 8px;
+  }
+  
+  .keyboardOpen .addTaskWrapper form {
+    border-radius: 14px;
   }
 }

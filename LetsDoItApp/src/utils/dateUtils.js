@@ -10,7 +10,123 @@ import {
   isAfter,
   format,
   getDay,
+  parseISO,
 } from 'date-fns';
+
+// ============================================
+// Timezone-aware date utilities
+// ============================================
+
+/**
+ * Get today's date as a YYYY-MM-DD string in a specific timezone
+ * @param {string} timezone - IANA timezone string (default: device timezone)
+ * @returns {string} - YYYY-MM-DD format
+ */
+export function getTodayDateString(timezone = Intl.DateTimeFormat().resolvedOptions().timeZone) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(new Date());
+}
+
+/**
+ * Parse a YYYY-MM-DD string to a Date object (at local noon to avoid boundary issues)
+ * @param {string} dateStr - YYYY-MM-DD format
+ * @returns {Date}
+ */
+export function parseDateString(dateStr) {
+  if (!dateStr) return null;
+  // Parse as local noon to avoid timezone boundary issues
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+}
+
+/**
+ * Extract YYYY-MM-DD from any date representation
+ * Handles: ISO strings, Date objects, or { localDate } objects
+ * @param {string|Date|object} date - The date to extract
+ * @returns {string} - YYYY-MM-DD format
+ */
+export function extractDateString(date) {
+  if (!date) return null;
+  
+  // Already YYYY-MM-DD format
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+  
+  // Object with localDate property (new format)
+  if (typeof date === 'object' && date.localDate) {
+    return date.localDate;
+  }
+  
+  // ISO string
+  if (typeof date === 'string') {
+    // Extract date from ISO string using local interpretation
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  // Date object
+  if (date instanceof Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  return null;
+}
+
+/**
+ * Compare two date strings (YYYY-MM-DD format)
+ * @returns {number} - negative if a < b, 0 if equal, positive if a > b
+ */
+export function compareDateStrings(a, b) {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return a.localeCompare(b);
+}
+
+/**
+ * Check if a date string is before another
+ */
+export function isDateStringBefore(dateStr, compareToStr) {
+  return dateStr < compareToStr;
+}
+
+/**
+ * Check if a date string is after another
+ */
+export function isDateStringAfter(dateStr, compareToStr) {
+  return dateStr > compareToStr;
+}
+
+/**
+ * Check if two date strings are the same day
+ */
+export function isSameDateString(dateStr1, dateStr2) {
+  return dateStr1 === dateStr2;
+}
+
+/**
+ * Add days to a date string
+ * @param {string} dateStr - YYYY-MM-DD format
+ * @param {number} days - Number of days to add (can be negative)
+ * @returns {string} - YYYY-MM-DD format
+ */
+export function addDaysToDateString(dateStr, days) {
+  const date = parseDateString(dateStr);
+  const result = addDays(date, days);
+  return extractDateString(result);
+}
 
 /**
  * Get start of today (midnight)
@@ -95,10 +211,11 @@ export function formatDate(date, formatStr = 'MMM d, yyyy') {
 
 /**
  * Format date for input[type="date"]
+ * Extracts the local date string for consistent display
  */
 export function formatDateForInput(date) {
   if (!date) return '';
-  return format(new Date(date), 'yyyy-MM-dd');
+  return extractDateString(date) || '';
 }
 
 /**
@@ -112,11 +229,11 @@ export function getDayOfWeek(date) {
 
 /**
  * Categorize tasks into daily sections
+ * Uses date string comparison for timezone-agnostic categorization
  */
 export function categorizeDailyTasks(tasks) {
-  const today = getTodayStart();
-  const tomorrow = addDays(today, 1);
-  const weekFromNow = addDays(today, 7);
+  const todayStr = getTodayDateString();
+  const tomorrowStr = addDaysToDateString(todayStr, 1);
 
   const unfinished = [];
   const todayTasks = [];
@@ -129,10 +246,11 @@ export function categorizeDailyTasks(tasks) {
       // No due date = Someday
       someday.push(task);
     } else {
-      const dueDate = startOfDay(new Date(task.dueDate));
+      // Extract the date string from the stored dueDate
+      const dueDateStr = extractDateString(task.dueDate);
       
       // Past tasks (before today)
-      if (isBefore(dueDate, today)) {
+      if (isDateStringBefore(dueDateStr, todayStr)) {
         // Only show unfinished past tasks in Overdue
         // Completed past tasks are hidden (they're done)
         if (!task.doneAt) {
@@ -140,15 +258,15 @@ export function categorizeDailyTasks(tasks) {
         }
       }
       // Today's tasks (both completed and uncompleted)
-      else if (isSameDay(dueDate, today)) {
+      else if (isSameDateString(dueDateStr, todayStr)) {
         todayTasks.push(task);
       }
       // Tomorrow's tasks
-      else if (isSameDay(dueDate, tomorrow)) {
+      else if (isSameDateString(dueDateStr, tomorrowStr)) {
         tomorrowTasks.push(task);
       }
       // Upcoming (2+ days from now)
-      else if (isAfter(dueDate, tomorrow)) {
+      else if (isDateStringAfter(dueDateStr, tomorrowStr)) {
         upcoming.push(task);
       }
     }
@@ -159,18 +277,23 @@ export function categorizeDailyTasks(tasks) {
 
 /**
  * Categorize tasks into weekly sections (by day of week)
+ * Uses date string comparison for timezone-agnostic categorization
  */
 export function categorizeWeeklyTasks(tasks, weekStartDate) {
   const days = Array.from({ length: 7 }, () => []);
   
+  const weekStart = startOfWeek(weekStartDate, { weekStartsOn: 1 });
+  const weekStartStr = extractDateString(weekStart);
+  const weekEndStr = addDaysToDateString(weekStartStr, 6);
+  
   tasks.forEach((task) => {
     if (!task.dueDate) return;
     
-    const dueDate = new Date(task.dueDate);
-    const weekStart = startOfWeek(weekStartDate, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(weekStartDate, { weekStartsOn: 1 });
+    const dueDateStr = extractDateString(task.dueDate);
     
-    if (dueDate >= weekStart && dueDate <= weekEnd) {
+    // Check if date is within the week
+    if (dueDateStr >= weekStartStr && dueDateStr <= weekEndStr) {
+      const dueDate = parseDateString(dueDateStr);
       const dayIndex = getDayOfWeek(dueDate);
       days[dayIndex].push(task);
     }
@@ -181,6 +304,7 @@ export function categorizeWeeklyTasks(tasks, weekStartDate) {
 
 /**
  * Sort tasks - incomplete first, then by due date
+ * Uses date string comparison for consistent sorting
  */
 export function sortTasks(tasks) {
   return [...tasks].sort((a, b) => {
@@ -188,12 +312,15 @@ export function sortTasks(tasks) {
     if (a.doneAt && !b.doneAt) return 1;
     if (!a.doneAt && b.doneAt) return -1;
     
-    // Sort by due date
-    if (a.dueDate && b.dueDate) {
-      return new Date(a.dueDate) - new Date(b.dueDate);
+    // Sort by due date using date strings
+    const aDateStr = extractDateString(a.dueDate);
+    const bDateStr = extractDateString(b.dueDate);
+    
+    if (aDateStr && bDateStr) {
+      return compareDateStrings(aDateStr, bDateStr);
     }
-    if (a.dueDate && !b.dueDate) return -1;
-    if (!a.dueDate && b.dueDate) return 1;
+    if (aDateStr && !bDateStr) return -1;
+    if (!aDateStr && bDateStr) return 1;
     
     // Sort by creation date
     return new Date(a.createdAt) - new Date(b.createdAt);

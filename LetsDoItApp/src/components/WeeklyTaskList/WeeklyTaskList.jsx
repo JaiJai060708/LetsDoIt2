@@ -12,6 +12,8 @@ import {
   isPast,
   isToday,
   DAY_NAMES,
+  extractDateString,
+  parseDateString,
 } from '../../utils/dateUtils';
 import TaskList from '../TaskList';
 import AddTask from '../AddTask';
@@ -26,15 +28,13 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [tagDeadlinesByDay, setTagDeadlinesByDay] = useState(Array(7).fill([]));
   const [isMobile, setIsMobile] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(null);
 
   const weekStart = getWeekStart(currentDate);
 
-  // Parse date string to local date (avoids timezone issues with YYYY-MM-DD format)
+  // Parse date string to local date (avoids timezone issues)
   const parseLocalDate = (dateStr) => {
-    if (!dateStr) return null;
-    if (dateStr.includes('T')) return new Date(dateStr);
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
+    return parseDateString(dateStr);
   };
 
   // Load tag deadlines for the current week
@@ -102,6 +102,7 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   useEffect(() => {
     if (!isMobile) {
       setIsKeyboardOpen(false);
+      setViewportHeight(null);
       return;
     }
 
@@ -113,23 +114,33 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
 
     const handleResize = () => {
       const height = viewport.height;
+      const offsetTop = viewport.offsetTop;
       const isOpen = baselineHeight - height > threshold;
+      
       setIsKeyboardOpen(isOpen);
-      if (!isOpen) {
+      
+      if (isOpen) {
+        // Calculate the bottom position above the keyboard
+        setViewportHeight(height + offsetTop);
+      } else {
+        setViewportHeight(null);
         baselineHeight = height;
       }
     };
 
     const handleOrientationChange = () => {
       baselineHeight = viewport.height;
+      setViewportHeight(null);
       handleResize();
     };
 
     viewport.addEventListener('resize', handleResize);
+    viewport.addEventListener('scroll', handleResize);
     window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
       viewport.removeEventListener('resize', handleResize);
+      viewport.removeEventListener('scroll', handleResize);
       window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, [isMobile]);
@@ -179,8 +190,8 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     const movedTask = sourceTasks.find(t => t.id === draggableId);
     if (!movedTask) return;
 
-    // Calculate new due date
-    const newDueDate = getDateForDayId(destination.droppableId).toISOString();
+    // Calculate new due date as YYYY-MM-DD string (timezone-agnostic)
+    const newDueDate = extractDateString(getDateForDayId(destination.droppableId));
 
     // Optimistically update UI
     const newWeekTasks = [...weekTasks];
@@ -295,7 +306,10 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
         )}
       </div>
 
-      <div className={styles.footer}>
+      <div 
+        className={styles.footer}
+        style={viewportHeight ? { '--viewport-bottom': `${viewportHeight}px` } : undefined}
+      >
         <AddTask
           onTaskCreated={handleTaskCreated}
           defaultDueDate={getDefaultDueDate()}
