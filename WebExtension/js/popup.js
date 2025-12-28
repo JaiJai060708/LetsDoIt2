@@ -13,7 +13,9 @@ import {
   getGoogleDriveSyncSettings,
   syncFromGoogleDrive,
   setAutoSyncCallback,
-  SYNC_RESULT
+  SYNC_RESULT,
+  getCurrentLocalDateString,
+  createLocalTimestamp
 } from './database.js';
 import { 
   categorizeDailyTasks, 
@@ -23,7 +25,11 @@ import {
   isPast, 
   isToday, 
   isTomorrow, 
-  formatDate 
+  formatDate,
+  getTodayDateString,
+  isDateStringPast,
+  extractDateString,
+  createLocalISOString
 } from './dateUtils.js';
 import { 
   getTodayKey, 
@@ -363,10 +369,19 @@ function isSectionExpanded(sectionId, taskCount) {
 // Format deadline display
 function formatDeadline(deadline) {
   if (!deadline) return null;
-  const date = new Date(deadline);
-  if (isToday(date)) return 'Today';
-  if (isTomorrow(date)) return 'Tomorrow';
-  return formatDate(date);
+  // Use date string comparison for deadline display
+  const deadlineStr = extractDateString(deadline);
+  const todayStr = getTodayDateString();
+  
+  if (deadlineStr === todayStr) return 'Today';
+  
+  // Check tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = extractDateString(tomorrow);
+  if (deadlineStr === tomorrowStr) return 'Tomorrow';
+  
+  return formatDate(deadline);
 }
 
 // Extract first URL from text
@@ -379,8 +394,11 @@ function extractUrl(text) {
 
 // Create task element
 function createTaskElement(task) {
+  // Use date string comparison for past check
+  const dueDateStr = extractDateString(task.dueDate);
+  const taskIsPast = dueDateStr && isDateStringPast(dueDateStr);
   const taskEl = document.createElement('div');
-  taskEl.className = `task ${task.doneAt ? 'done' : ''} ${isPast(new Date(task.dueDate)) && !task.doneAt ? 'past' : ''}`;
+  taskEl.className = `task ${task.doneAt ? 'done' : ''} ${taskIsPast && !task.doneAt ? 'past' : ''}`;
   taskEl.dataset.taskId = task.id;
 
   const leftEl = document.createElement('div');
@@ -639,7 +657,8 @@ async function handleToggleDone(taskId, done) {
   
   // Wait for animation to complete (1s), then actually mark as done
   setTimeout(async () => {
-    const doneAt = new Date().toISOString();
+    // Use local timestamp instead of UTC ISO string
+    const doneAt = createLocalISOString();
     await updateTask(taskId, { doneAt });
     await loadTasks();
     renderSections();
@@ -658,9 +677,12 @@ async function handleAddTask() {
   const content = newTaskInput.value.trim();
   if (!content) return;
 
+  // Use today's date string as dueDate (timezone-aware)
+  const todayDateStr = getTodayDateString();
+  
   await createTask({
     content,
-    dueDate: new Date().toISOString(),
+    dueDate: todayDateStr,
     note: pendingTaskNote,
     doneAt: null,
     tags: [],
@@ -794,7 +816,11 @@ function setupEventListeners() {
 
 // Happiness modal functions
 function openHappinessModal() {
-  const today = new Date();
+  // Use timezone-aware date formatting
+  const todayStr = getTodayDateString();
+  const [year, month, day] = todayStr.split('-').map(Number);
+  const today = new Date(year, month - 1, day);
+  
   happinessDateLabel.textContent = today.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',

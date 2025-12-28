@@ -7,8 +7,136 @@ const TASKS_STORE = 'tasks';
 const SETTINGS_STORE = 'settings';
 const HABITS_STORE = 'habits';
 
+// Device timezone setting key (stored in localStorage, not synced)
+const DEVICE_TIMEZONE_KEY = 'letsdoit_device_timezone';
+
 // Auto-sync callback - will be set by popup.js
 let autoSyncCallback = null;
+
+// ============================================
+// Timezone Settings (Device-specific, not synced)
+// ============================================
+
+/**
+ * Get the device timezone setting
+ * Returns 'auto' for automatic detection or an IANA timezone string
+ */
+export function getDeviceTimezone() {
+  try {
+    return localStorage.getItem(DEVICE_TIMEZONE_KEY) || 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+
+/**
+ * Set the device timezone setting
+ * This is stored locally and NOT synced
+ */
+export function setDeviceTimezone(timezone) {
+  try {
+    localStorage.setItem(DEVICE_TIMEZONE_KEY, timezone);
+  } catch (e) {
+    console.error('Failed to save device timezone:', e);
+  }
+}
+
+/**
+ * Get the effective timezone (resolves 'auto' to actual timezone)
+ */
+export function getEffectiveTimezone() {
+  const setting = getDeviceTimezone();
+  if (setting === 'auto') {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+  return setting;
+}
+
+/**
+ * Get list of common timezone options for the selector
+ */
+export function getTimezoneOptions() {
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  
+  const timezones = [
+    { value: 'auto', label: `Automatic (${browserTimezone})` },
+    { value: 'Pacific/Honolulu', label: 'Hawaii (HST)' },
+    { value: 'America/Anchorage', label: 'Alaska (AKST)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (PST)' },
+    { value: 'America/Denver', label: 'Mountain Time (MST)' },
+    { value: 'America/Chicago', label: 'Central Time (CST)' },
+    { value: 'America/New_York', label: 'Eastern Time (EST)' },
+    { value: 'America/Sao_Paulo', label: 'São Paulo (BRT)' },
+    { value: 'Atlantic/Reykjavik', label: 'Iceland (GMT)' },
+    { value: 'Europe/London', label: 'London (GMT/BST)' },
+    { value: 'Europe/Paris', label: 'Paris (CET)' },
+    { value: 'Europe/Berlin', label: 'Berlin (CET)' },
+    { value: 'Europe/Moscow', label: 'Moscow (MSK)' },
+    { value: 'Asia/Dubai', label: 'Dubai (GST)' },
+    { value: 'Asia/Kolkata', label: 'India (IST)' },
+    { value: 'Asia/Bangkok', label: 'Bangkok (ICT)' },
+    { value: 'Asia/Singapore', label: 'Singapore (SGT)' },
+    { value: 'Asia/Hong_Kong', label: 'Hong Kong (HKT)' },
+    { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
+    { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+    { value: 'Asia/Seoul', label: 'Seoul (KST)' },
+    { value: 'Australia/Sydney', label: 'Sydney (AEST)' },
+    { value: 'Australia/Perth', label: 'Perth (AWST)' },
+    { value: 'Pacific/Auckland', label: 'Auckland (NZST)' },
+  ];
+  
+  // Add browser timezone if not already in list
+  if (!timezones.some(tz => tz.value === browserTimezone)) {
+    timezones.splice(1, 0, { value: browserTimezone, label: `${browserTimezone} (Browser)` });
+  }
+  
+  return timezones;
+}
+
+/**
+ * Create a local timestamp string (without 'Z' suffix)
+ * This represents local time without implicit UTC conversion
+ */
+export function createLocalTimestamp() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const ms = String(now.getMilliseconds()).padStart(3, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}`;
+}
+
+/**
+ * Get today's date string in YYYY-MM-DD format for the effective timezone
+ */
+export function getCurrentLocalDateString() {
+  const timezone = getEffectiveTimezone();
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-CA', { 
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  return formatter.format(now);
+}
+
+/**
+ * Format a date to YYYY-MM-DD in a specific timezone
+ */
+export function formatDateInTimezone(date, timezone = getEffectiveTimezone()) {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const formatter = new Intl.DateTimeFormat('en-CA', { 
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  return formatter.format(d);
+}
 
 /**
  * Set the callback function to trigger auto-sync after data modifications
@@ -122,11 +250,12 @@ export async function getTask(id) {
  */
 export async function createTask(task) {
   const db = await initDB();
+  const timestamp = createLocalTimestamp();
   const newTask = {
     ...task,
     id: task.id || crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
   };
 
   return new Promise((resolve, reject) => {
@@ -156,7 +285,7 @@ export async function updateTask(id, updates) {
     ...existingTask,
     ...updates,
     id,
-    updatedAt: new Date().toISOString(),
+    updatedAt: createLocalTimestamp(),
   };
 
   return new Promise((resolve, reject) => {
@@ -249,11 +378,14 @@ export async function getAvailableTags() {
  */
 export async function addTag(tag) {
   const tags = await getAvailableTags();
+  const timestamp = createLocalTimestamp();
   const newTag = {
     id: tag.id || crypto.randomUUID(),
     name: tag.name,
     color: tag.color || '#6b7280',
     deadline: tag.deadline || null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
   };
   tags.push(newTag);
   await setSetting('availableTags', tags);
@@ -304,6 +436,7 @@ export async function upsertHabit(habitData) {
   const year = parseInt(dateStr.split('-')[0]);
 
   const existing = await getHabitByDate(dateStr);
+  const timestamp = createLocalTimestamp();
 
   return new Promise((resolve, reject) => {
     const tx = db.transaction(HABITS_STORE, 'readwrite');
@@ -315,15 +448,15 @@ export async function upsertHabit(habitData) {
         ...existing,
         ...habitData,
         year,
-        updatedAt: new Date().toISOString(),
+        updatedAt: timestamp,
       };
     } else {
       entry = {
         id: crypto.randomUUID(),
         ...habitData,
         year,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: timestamp,
+        updatedAt: timestamp,
       };
     }
 
@@ -464,7 +597,7 @@ export async function getLocalDataModifiedAt() {
 }
 
 export async function updateLocalDataTimestamp() {
-  const timestamp = new Date().toISOString();
+  const timestamp = createLocalTimestamp();
   await setSetting('localDataModifiedAt', timestamp);
   return timestamp;
 }

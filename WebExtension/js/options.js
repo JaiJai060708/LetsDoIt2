@@ -7,6 +7,10 @@ import {
   syncFromGoogleDrive,
   extractGoogleDriveFileId,
   SYNC_RESULT,
+  getDeviceTimezone,
+  setDeviceTimezone,
+  getTimezoneOptions,
+  getEffectiveTimezone,
 } from './database.js';
 
 // State
@@ -18,6 +22,7 @@ let googleDriveLastSyncAt = null;
 let isGoogleDriveSyncing = false;
 let showAdvancedSync = false;
 let isEditing = false;
+let currentTimezone = 'auto';
 
 // DOM Elements
 const statusBadge = document.getElementById('statusBadge');
@@ -50,18 +55,56 @@ const scriptCode = document.getElementById('scriptCode');
 const toast = document.getElementById('toast');
 const toastIcon = document.getElementById('toastIcon');
 const toastMessage = document.getElementById('toastMessage');
+const timezoneSelect = document.getElementById('timezoneSelect');
+const effectiveTimezoneEl = document.getElementById('effectiveTimezone');
 
 // Initialize
 async function init() {
   try {
     await initDB();
     await loadSettings();
+    loadTimezoneSettings();
     updateUI();
     setupEventListeners();
   } catch (error) {
     console.error('Failed to initialize:', error);
     showToast('Failed to load settings', 'error');
   }
+}
+
+// Load timezone settings
+function loadTimezoneSettings() {
+  currentTimezone = getDeviceTimezone();
+  
+  // Populate timezone select
+  const options = getTimezoneOptions();
+  timezoneSelect.innerHTML = '';
+  options.forEach(tz => {
+    const option = document.createElement('option');
+    option.value = tz.value;
+    option.textContent = tz.label;
+    timezoneSelect.appendChild(option);
+  });
+  
+  // Set current value
+  timezoneSelect.value = currentTimezone;
+  
+  // Update effective timezone display
+  updateEffectiveTimezoneDisplay();
+}
+
+// Update effective timezone display
+function updateEffectiveTimezoneDisplay() {
+  const effective = getEffectiveTimezone();
+  effectiveTimezoneEl.textContent = effective;
+}
+
+// Handle timezone change
+function handleTimezoneChange(newTimezone) {
+  setDeviceTimezone(newTimezone);
+  currentTimezone = newTimezone;
+  updateEffectiveTimezoneDisplay();
+  showToast('Timezone updated');
 }
 
 // Load Google Drive settings
@@ -189,6 +232,11 @@ function showToast(message, type = 'success') {
 
 // Setup event listeners
 function setupEventListeners() {
+  // Timezone select
+  timezoneSelect.addEventListener('change', (e) => {
+    handleTimezoneChange(e.target.value);
+  });
+  
   // Read link input
   readLinkInput.addEventListener('input', () => {
     googleDriveLink = readLinkInput.value;

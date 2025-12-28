@@ -51,6 +51,39 @@
           </p>
         </div>
 
+        <!-- Device Timezone Section -->
+        <section class="section">
+          <div class="section-header">
+            <div class="section-icon preference">🌍</div>
+            <div class="section-title-group">
+              <h2 class="section-title">Device Timezone</h2>
+              <p class="section-description">
+                Set the timezone for this device. Dates will be displayed according to this setting.
+              </p>
+            </div>
+          </div>
+
+          <div class="timezone-card">
+            <div class="timezone-selector">
+              <label for="timezoneSelect" class="timezone-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                </svg>
+                Timezone
+              </label>
+              <select id="timezoneSelect" class="timezone-select">
+                <!-- Options will be populated by JavaScript -->
+              </select>
+            </div>
+            <p class="timezone-note">
+              <span class="timezone-effective">Effective: <strong id="effectiveTimezone">Loading...</strong></span>
+              <br>
+              This setting is local to this device and will not sync.
+            </p>
+          </div>
+        </section>
+
         <!-- Google Drive Sync Section -->
         <section class="section">
           <div class="section-header">

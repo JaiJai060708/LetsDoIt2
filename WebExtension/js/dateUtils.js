@@ -1,4 +1,129 @@
 // Date utility functions for LetsDoIt Web Extension
+import { getEffectiveTimezone, getCurrentLocalDateString } from './database.js';
+
+// ============================================
+// Timezone-aware date string functions
+// ============================================
+
+/**
+ * Get today's date as a YYYY-MM-DD string in the effective timezone
+ */
+export function getTodayDateString() {
+  return getCurrentLocalDateString();
+}
+
+/**
+ * Parse a YYYY-MM-DD date string into a Date object (as local time)
+ * This ensures the date is treated as local, not UTC
+ */
+export function parseDateString(dateStr) {
+  if (!dateStr) return null;
+  // Handle ISO strings with time component
+  if (dateStr.includes('T')) {
+    // Extract just the date part
+    dateStr = dateStr.split('T')[0];
+  }
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+/**
+ * Extract YYYY-MM-DD from any date representation
+ */
+export function extractDateString(date) {
+  if (!date) return null;
+  if (typeof date === 'string') {
+    // If it's already a date string or ISO string, extract the date part
+    if (date.includes('T')) {
+      return date.split('T')[0];
+    }
+    // Already a YYYY-MM-DD string
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return date;
+    }
+    // Try to parse as date
+    const d = new Date(date);
+    if (!isNaN(d.getTime())) {
+      return formatDateToString(d);
+    }
+    return null;
+  }
+  if (date instanceof Date) {
+    return formatDateToString(date);
+  }
+  return null;
+}
+
+/**
+ * Format a Date object to YYYY-MM-DD string
+ */
+function formatDateToString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Create a local ISO-like string (without Z suffix)
+ * Used for timestamps like doneAt
+ */
+export function createLocalISOString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const ms = String(date.getMilliseconds()).padStart(3, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${ms}`;
+}
+
+/**
+ * Compare two date strings (YYYY-MM-DD format)
+ * Returns negative if a < b, positive if a > b, 0 if equal
+ */
+export function compareDateStrings(a, b) {
+  if (!a && !b) return 0;
+  if (!a) return 1; // null dates go to end
+  if (!b) return -1;
+  return a.localeCompare(b);
+}
+
+/**
+ * Check if date string a is before date string b
+ */
+export function isDateStringBefore(a, b) {
+  return compareDateStrings(a, b) < 0;
+}
+
+/**
+ * Check if date string a is after date string b
+ */
+export function isDateStringAfter(a, b) {
+  return compareDateStrings(a, b) > 0;
+}
+
+/**
+ * Check if two date strings are the same
+ */
+export function isSameDateString(a, b) {
+  return compareDateStrings(a, b) === 0;
+}
+
+/**
+ * Add days to a date string, returns new date string
+ */
+export function addDaysToDateString(dateStr, days) {
+  const date = parseDateString(dateStr);
+  if (!date) return null;
+  date.setDate(date.getDate() + days);
+  return formatDateToString(date);
+}
+
+// ============================================
+// Legacy Date object functions (updated for timezone awareness)
+// ============================================
 
 /**
  * Get start of day (midnight) for a given date
@@ -88,10 +213,20 @@ export function isPast(date) {
 }
 
 /**
+ * Check if a date string is in the past
+ */
+export function isDateStringPast(dateStr) {
+  const today = getTodayDateString();
+  return isDateStringBefore(dateStr, today);
+}
+
+/**
  * Format date for display
  */
 export function formatDate(date, formatStr = 'short') {
-  const d = new Date(date);
+  // Handle date strings
+  const d = typeof date === 'string' ? parseDateString(date) : new Date(date);
+  if (!d || isNaN(d.getTime())) return '';
   
   switch (formatStr) {
     case 'short':
@@ -104,18 +239,18 @@ export function formatDate(date, formatStr = 'short') {
         year: 'numeric' 
       });
     case 'input':
-      return d.toISOString().split('T')[0];
+      return formatDateToString(d);
     default:
       return d.toLocaleDateString();
   }
 }
 
 /**
- * Categorize tasks into daily sections
+ * Categorize tasks into daily sections using date strings
  */
 export function categorizeDailyTasks(tasks) {
-  const today = getTodayStart();
-  const tomorrow = addDays(today, 1);
+  const todayStr = getTodayDateString();
+  const tomorrowStr = addDaysToDateString(todayStr, 1);
 
   const unfinished = [];
   const todayTasks = [];
@@ -127,17 +262,18 @@ export function categorizeDailyTasks(tasks) {
     if (!task.dueDate) {
       someday.push(task);
     } else {
-      const dueDate = startOfDay(new Date(task.dueDate));
+      // Extract date string from dueDate (handles both YYYY-MM-DD and ISO formats)
+      const dueDateStr = extractDateString(task.dueDate);
 
-      if (isBefore(dueDate, today)) {
+      if (isDateStringBefore(dueDateStr, todayStr)) {
         if (!task.doneAt) {
           unfinished.push(task);
         }
-      } else if (isSameDay(dueDate, today)) {
+      } else if (isSameDateString(dueDateStr, todayStr)) {
         todayTasks.push(task);
-      } else if (isSameDay(dueDate, tomorrow)) {
+      } else if (isSameDateString(dueDateStr, tomorrowStr)) {
         tomorrowTasks.push(task);
-      } else if (isAfter(dueDate, tomorrow)) {
+      } else if (isDateStringAfter(dueDateStr, tomorrowStr)) {
         upcoming.push(task);
       }
     }
@@ -155,15 +291,21 @@ export function sortTasks(tasks) {
     if (a.doneAt && !b.doneAt) return 1;
     if (!a.doneAt && b.doneAt) return -1;
 
-    // Sort by due date
-    if (a.dueDate && b.dueDate) {
-      return new Date(a.dueDate) - new Date(b.dueDate);
+    // Sort by due date using date strings
+    const aDateStr = extractDateString(a.dueDate);
+    const bDateStr = extractDateString(b.dueDate);
+    
+    if (aDateStr && bDateStr) {
+      const cmp = compareDateStrings(aDateStr, bDateStr);
+      if (cmp !== 0) return cmp;
     }
-    if (a.dueDate && !b.dueDate) return -1;
-    if (!a.dueDate && b.dueDate) return 1;
+    if (aDateStr && !bDateStr) return -1;
+    if (!aDateStr && bDateStr) return 1;
 
-    // Sort by creation date
-    return new Date(a.createdAt) - new Date(b.createdAt);
+    // Sort by creation date (compare strings directly for local timestamps)
+    const aCreated = a.createdAt || '';
+    const bCreated = b.createdAt || '';
+    return aCreated.localeCompare(bCreated);
   });
 }
 
