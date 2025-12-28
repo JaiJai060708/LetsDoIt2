@@ -4,6 +4,7 @@ import { ThemeProvider, SyncProvider, useSync } from './context';
 import HomePage from './pages/HomePage';
 import HappinessPage from './pages/HappinessPage';
 import OptionsPage from './pages/OptionsPage';
+import AddTaskPage from './pages/AddTaskPage';
 import { setAutoSyncCallback } from './db/database';
 import './App.css';
 
@@ -32,6 +33,7 @@ function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/happiness" element={<HappinessPage />} />
         <Route path="/options" element={<OptionsPage />} />
+        <Route path="/add-task" element={<AddTaskPage />} />
       </Routes>
     </>
   );
