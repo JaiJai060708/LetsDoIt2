@@ -40,9 +40,7 @@
     font-size: 11px;
     border-radius: 5px;
   }
-}
-
-@media (max-width: 480px) {
+}@media (max-width: 480px) {
   .container {
     border-radius: 5px;
     padding: 2px;

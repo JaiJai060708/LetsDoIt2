@@ -1,7 +1,8 @@
 # ACM Certificate for custom domain (must be in us-east-1 for CloudFront)
+# Covers: lets-do-it.xyz, www.lets-do-it.xyz, api.lets-do-it.xyz
 resource "aws_acm_certificate" "website" {
   domain_name               = var.domain_name
-  subject_alternative_names = ["www.${var.domain_name}"]
+  subject_alternative_names = ["www.${var.domain_name}", "api.${var.domain_name}"]
   validation_method         = "DNS"
 
   lifecycle {
@@ -16,7 +17,8 @@ resource "aws_acm_certificate" "website" {
 
 # S3 Bucket for static website hosting
 resource "aws_s3_bucket" "website" {
-  bucket = "${var.project_name}-${var.environment}-website"
+  bucket        = "${var.project_name}-${var.environment}-website"
+  force_destroy = true # Allow bucket deletion even when not empty (deletes all objects including versions)
 }
 
 resource "aws_s3_bucket_versioning" "website" {

@@ -16,3 +16,20 @@ variable "domain_name" {
   default     = "lets-do-it.xyz"
 }
 
+# =============================================================================
+# Slack OAuth Credentials
+# =============================================================================
+
+variable "slack_client_id" {
+  description = "Slack App Client ID (from Slack App Settings > Basic Information)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "slack_client_secret" {
+  description = "Slack App Client Secret (from Slack App Settings > Basic Information)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
