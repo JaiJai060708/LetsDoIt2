@@ -34,7 +34,7 @@
 
 ## 🌐 Live Demo
 
-**Check out the live application at [lets-do-it.xyz](https://lets-do-it.xyz)**
+**Check out the live application at [www.lets-do-it.xyz](https://www.lets-do-it.xyz)**
 
 ---
 
