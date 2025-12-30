@@ -247,6 +247,10 @@ export function formatDate(date, formatStr = 'short') {
 
 /**
  * Categorize tasks into daily sections using date strings
+ * 
+ * Key behavior:
+ * - Completed tasks are shown in the day they were completed (doneAt), not their due date
+ * - Uncompleted tasks are shown based on their due date
  */
 export function categorizeDailyTasks(tasks) {
   const todayStr = getTodayDateString();
@@ -259,21 +263,51 @@ export function categorizeDailyTasks(tasks) {
   const someday = [];
 
   tasks.forEach((task) => {
+    // For completed tasks, use the completion date (doneAt) for categorization
+    if (task.doneAt) {
+      const doneAtStr = extractDateString(task.doneAt);
+      
+      // Completed in the past - don't show in daily view (they're archived)
+      if (isDateStringBefore(doneAtStr, todayStr)) {
+        return;
+      }
+      // Completed today
+      else if (isSameDateString(doneAtStr, todayStr)) {
+        todayTasks.push(task);
+      }
+      // Completed tomorrow (edge case, shouldn't happen normally)
+      else if (isSameDateString(doneAtStr, tomorrowStr)) {
+        tomorrowTasks.push(task);
+      }
+      // Completed in the future (edge case)
+      else if (isDateStringAfter(doneAtStr, tomorrowStr)) {
+        upcoming.push(task);
+      }
+      return;
+    }
+    
+    // For uncompleted tasks, use due date for categorization
     if (!task.dueDate) {
+      // No due date = Someday
       someday.push(task);
     } else {
       // Extract date string from dueDate (handles both YYYY-MM-DD and ISO formats)
       const dueDateStr = extractDateString(task.dueDate);
 
+      // Past tasks (before today) - these are overdue
       if (isDateStringBefore(dueDateStr, todayStr)) {
-        if (!task.doneAt) {
-          unfinished.push(task);
-        }
-      } else if (isSameDateString(dueDateStr, todayStr)) {
+        unfinished.push(task);
+      }
+      // Today's tasks
+      else if (isSameDateString(dueDateStr, todayStr)) {
         todayTasks.push(task);
-      } else if (isSameDateString(dueDateStr, tomorrowStr)) {
+      }
+      // Tomorrow's tasks
+      else if (isSameDateString(dueDateStr, tomorrowStr)) {
         tomorrowTasks.push(task);
-      } else if (isDateStringAfter(dueDateStr, tomorrowStr)) {
+      }
+      // Upcoming (2+ days from now)
+      else if (isDateStringAfter(dueDateStr, tomorrowStr)) {
         upcoming.push(task);
       }
     }

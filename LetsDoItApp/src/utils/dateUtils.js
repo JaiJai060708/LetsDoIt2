@@ -230,6 +230,10 @@ export function getDayOfWeek(date) {
 /**
  * Categorize tasks into daily sections
  * Uses date string comparison for timezone-agnostic categorization
+ * 
+ * Key behavior:
+ * - Completed tasks are shown in the day they were completed (doneAt), not their due date
+ * - Uncompleted tasks are shown based on their due date
  */
 export function categorizeDailyTasks(tasks) {
   const todayStr = getTodayDateString();
@@ -242,6 +246,30 @@ export function categorizeDailyTasks(tasks) {
   const someday = [];
 
   tasks.forEach((task) => {
+    // For completed tasks, use the completion date (doneAt) for categorization
+    if (task.doneAt) {
+      const doneAtStr = extractDateString(task.doneAt);
+      
+      // Completed in the past - don't show in daily view (they're archived)
+      if (isDateStringBefore(doneAtStr, todayStr)) {
+        return;
+      }
+      // Completed today
+      else if (isSameDateString(doneAtStr, todayStr)) {
+        todayTasks.push(task);
+      }
+      // Completed tomorrow (edge case, shouldn't happen normally)
+      else if (isSameDateString(doneAtStr, tomorrowStr)) {
+        tomorrowTasks.push(task);
+      }
+      // Completed in the future (edge case)
+      else if (isDateStringAfter(doneAtStr, tomorrowStr)) {
+        upcoming.push(task);
+      }
+      return;
+    }
+    
+    // For uncompleted tasks, use due date for categorization
     if (!task.dueDate) {
       // No due date = Someday
       someday.push(task);
@@ -249,15 +277,11 @@ export function categorizeDailyTasks(tasks) {
       // Extract the date string from the stored dueDate
       const dueDateStr = extractDateString(task.dueDate);
       
-      // Past tasks (before today)
+      // Past tasks (before today) - these are overdue
       if (isDateStringBefore(dueDateStr, todayStr)) {
-        // Only show unfinished past tasks in Overdue
-        // Completed past tasks are hidden (they're done)
-        if (!task.doneAt) {
-          unfinished.push(task);
-        }
+        unfinished.push(task);
       }
-      // Today's tasks (both completed and uncompleted)
+      // Today's tasks
       else if (isSameDateString(dueDateStr, todayStr)) {
         todayTasks.push(task);
       }
@@ -278,6 +302,10 @@ export function categorizeDailyTasks(tasks) {
 /**
  * Categorize tasks into weekly sections (by day of week)
  * Uses date string comparison for timezone-agnostic categorization
+ * 
+ * Key behavior:
+ * - Completed tasks are shown in the day they were completed (doneAt), not their due date
+ * - Uncompleted tasks are shown based on their due date
  */
 export function categorizeWeeklyTasks(tasks, weekStartDate) {
   const days = Array.from({ length: 7 }, () => []);
@@ -287,6 +315,20 @@ export function categorizeWeeklyTasks(tasks, weekStartDate) {
   const weekEndStr = addDaysToDateString(weekStartStr, 6);
   
   tasks.forEach((task) => {
+    // For completed tasks, use the completion date (doneAt) for categorization
+    if (task.doneAt) {
+      const doneAtStr = extractDateString(task.doneAt);
+      
+      // Check if completion date is within the week
+      if (doneAtStr >= weekStartStr && doneAtStr <= weekEndStr) {
+        const doneDate = parseDateString(doneAtStr);
+        const dayIndex = getDayOfWeek(doneDate);
+        days[dayIndex].push(task);
+      }
+      return;
+    }
+    
+    // For uncompleted tasks, use due date for categorization
     if (!task.dueDate) return;
     
     const dueDateStr = extractDateString(task.dueDate);
