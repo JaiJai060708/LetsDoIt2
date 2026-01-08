@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { addDays, isSameDay } from 'date-fns';
-import { getAllTasks, updateTask, getAvailableTags } from '../../db/database';
+import { Draggable, Droppable } from '@hello-pangea/dnd';
+import { getAllTasks, updateTask, getAvailableTags, completeTag, updateTag } from '../../db/database';
 import {
   getWeekStart,
   getWeekDayDate,
@@ -25,7 +26,9 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weekTasks, setWeekTasks] = useState(Array(7).fill([]));
   const [isLoading, setIsLoading] = useState(true);
-  const [tagDeadlinesByDay, setTagDeadlinesByDay] = useState(Array(7).fill([]));
+  const [tagDeadlinesByDay, setTagDeadlinesByDay] = useState(
+    Array(7).fill(null).map(() => ({ active: [], completed: [] }))
+  );
   const [isMobile, setIsMobile] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(null);
@@ -37,13 +40,14 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     return parseDateString(dateStr);
   };
 
-  // Load tag deadlines for the current week
+  // Load tag deadlines for the current week (both active and completed)
   const loadTagDeadlines = useCallback(async () => {
     try {
       const tags = await getAvailableTags();
-      const deadlinesByDay = Array(7).fill(null).map(() => []);
+      const deadlinesByDay = Array(7).fill(null).map(() => ({ active: [], completed: [] }));
 
       tags.forEach((tag) => {
+        // Skip tags without deadline
         if (!tag.deadline) return;
         const deadlineDate = parseLocalDate(tag.deadline);
         if (!deadlineDate) return;
@@ -52,7 +56,11 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
         for (let i = 0; i < 7; i++) {
           const dayDate = getWeekDayDate(currentDate, i);
           if (isSameDay(deadlineDate, dayDate)) {
-            deadlinesByDay[i].push(tag);
+            if (tag.completedAt) {
+              deadlinesByDay[i].completed.push(tag);
+            } else {
+              deadlinesByDay[i].active.push(tag);
+            }
             break;
           }
         }
@@ -63,6 +71,18 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
       console.error('Failed to load tag deadlines:', error);
     }
   }, [currentDate]);
+
+  // Handle completing a tag with deadline
+  const handleCompleteTag = async (tagId) => {
+    await completeTag(tagId, true);
+    loadTagDeadlines();
+  };
+
+  // Handle uncompleting a tag
+  const handleUncompleteTag = async (tagId) => {
+    await completeTag(tagId, false);
+    loadTagDeadlines();
+  };
 
   const loadTasks = useCallback(async () => {
     try {
@@ -180,6 +200,66 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
       return;
     }
 
+    // Check if this is a tag drag (tags have "tag-" prefix)
+    const isTagDrag = draggableId.startsWith('tag-');
+    
+    if (isTagDrag) {
+      // Handle tag drag
+      const tagId = draggableId.replace('tag-', '');
+      const sourceDayId = source.droppableId.replace('tags-', '');
+      const destDayId = destination.droppableId.replace('tags-', '');
+      
+      const sourceIndex = DAY_IDS.indexOf(sourceDayId);
+      const destIndex = DAY_IDS.indexOf(destDayId);
+      
+      if (sourceIndex === -1 || destIndex === -1) return;
+      
+      // Calculate new deadline as YYYY-MM-DD string
+      const newDeadline = extractDateString(getWeekDayDate(currentDate, destIndex));
+      
+      // Optimistically update UI
+      const newTagDeadlines = tagDeadlinesByDay.map(day => ({
+        active: [...day.active],
+        completed: [...day.completed]
+      }));
+      
+      // Find the tag in source (could be active or completed)
+      let movedTag = newTagDeadlines[sourceIndex].active.find(t => t.id === tagId);
+      let wasCompleted = false;
+      if (!movedTag) {
+        movedTag = newTagDeadlines[sourceIndex].completed.find(t => t.id === tagId);
+        wasCompleted = true;
+      }
+      if (!movedTag) return;
+      
+      // Remove from source
+      if (wasCompleted) {
+        newTagDeadlines[sourceIndex].completed = newTagDeadlines[sourceIndex].completed.filter(t => t.id !== tagId);
+      } else {
+        newTagDeadlines[sourceIndex].active = newTagDeadlines[sourceIndex].active.filter(t => t.id !== tagId);
+      }
+      
+      // Add to destination
+      const updatedTag = { ...movedTag, deadline: newDeadline };
+      if (wasCompleted) {
+        newTagDeadlines[destIndex].completed.push(updatedTag);
+      } else {
+        newTagDeadlines[destIndex].active.push(updatedTag);
+      }
+      
+      setTagDeadlinesByDay(newTagDeadlines);
+      
+      // Update in database
+      try {
+        await updateTag(tagId, { deadline: newDeadline });
+      } catch (error) {
+        console.error('Failed to update tag:', error);
+        loadTagDeadlines();
+      }
+      return;
+    }
+
+    // Handle task drag
     const sourceIndex = DAY_IDS.indexOf(source.droppableId);
     const destIndex = DAY_IDS.indexOf(destination.droppableId);
 
@@ -257,7 +337,8 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
                 const dayDate = getWeekDayDate(currentDate, index);
                 const dayIsPast = isPast(dayDate) && !isToday(dayDate);
                 const dayIsToday = isToday(dayDate);
-                const dayDeadlines = tagDeadlinesByDay[index] || [];
+                const dayDeadlines = tagDeadlinesByDay[index] || { active: [], completed: [] };
+                const hasAnyTags = dayDeadlines.active.length > 0 || dayDeadlines.completed.length > 0;
 
                 return (
                   <div
@@ -268,25 +349,76 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
                       <span className={styles.dayName}>{dayName}</span>
                       <span className={styles.dayNumber}>{dayDate.getDate()}</span>
                     </div>
-                    {dayDeadlines.length > 0 && (
-                      <div className={styles.dayDeadlines}>
-                        {dayDeadlines.map((tag) => (
-                          <div
-                            key={tag.id}
-                            className={`${styles.deadlineChip} ${dayIsPast ? styles.overdue : ''} ${dayIsToday ? styles.dueToday : ''}`}
-                            style={{ 
-                              backgroundColor: tag.color + '20', 
-                              borderColor: tag.color,
-                              color: tag.color 
-                            }}
-                            title={`${tag.name} deadline`}
-                          >
-                            <span className={styles.deadlineIcon}>🎯</span>
-                            <span className={styles.deadlineName}>{tag.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <Droppable droppableId={`tags-${DAY_IDS[index]}`} type="TAG">
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`${styles.dayDeadlines} ${hasAnyTags ? styles.hasTags : ''} ${snapshot.isDraggingOver ? styles.dragOver : ''}`}
+                        >
+                          {/* Active tags */}
+                          {dayDeadlines.active.map((tag, tagIndex) => (
+                            <Draggable key={tag.id} draggableId={`tag-${tag.id}`} index={tagIndex}>
+                              {(dragProvided, dragSnapshot) => (
+                                <div
+                                  ref={dragProvided.innerRef}
+                                  {...dragProvided.draggableProps}
+                                  {...dragProvided.dragHandleProps}
+                                  className={`${styles.deadlineChip} ${dayIsPast ? styles.overdue : ''} ${dayIsToday ? styles.dueToday : ''} ${dragSnapshot.isDragging ? styles.dragging : ''}`}
+                                  style={{ 
+                                    backgroundColor: tag.color + '20', 
+                                    borderColor: tag.color,
+                                    color: tag.color,
+                                    ...dragProvided.draggableProps.style
+                                  }}
+                                  title={`Drag to move or check to complete ${tag.name}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className={styles.deadlineCheckbox}
+                                    onChange={() => handleCompleteTag(tag.id)}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <span className={styles.deadlineIcon}>🎯</span>
+                                  <span className={styles.deadlineName}>{tag.name}</span>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {/* Completed tags */}
+                          {dayDeadlines.completed.map((tag, tagIndex) => (
+                            <Draggable key={tag.id} draggableId={`tag-${tag.id}`} index={dayDeadlines.active.length + tagIndex}>
+                              {(dragProvided, dragSnapshot) => (
+                                <div
+                                  ref={dragProvided.innerRef}
+                                  {...dragProvided.draggableProps}
+                                  {...dragProvided.dragHandleProps}
+                                  className={`${styles.deadlineChip} ${styles.completed} ${dragSnapshot.isDragging ? styles.dragging : ''}`}
+                                  style={{ 
+                                    backgroundColor: tag.color + '10', 
+                                    borderColor: tag.color + '60',
+                                    color: tag.color,
+                                    ...dragProvided.draggableProps.style
+                                  }}
+                                  title={`Completed - drag to move or uncheck to restore ${tag.name}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className={styles.deadlineCheckbox}
+                                    checked
+                                    onChange={() => handleUncompleteTag(tag.id)}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                  <span className={styles.deadlineIcon}>✓</span>
+                                  <span className={styles.deadlineName}>{tag.name}</span>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
                     <div className={styles.dayContent}>
                       <TaskList
                         droppableId={DAY_IDS[index]}

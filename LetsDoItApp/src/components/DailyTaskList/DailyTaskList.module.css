@@ -248,7 +248,7 @@
 
 .deadlineBanner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 10px 14px;
   border-radius: 10px;
@@ -271,6 +271,50 @@
 .deadlineBannerIcon {
   font-size: 16px;
   flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.deadlineBannerContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deadlineBannerLabel {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  opacity: 0.8;
+}
+
+.deadlineTagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-left: 4px;
+}
+
+.deadlineTagItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.deadlineCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: currentColor;
+  flex-shrink: 0;
+}
+
+.deadlineTagName {
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .deadlineBannerText {
@@ -286,7 +330,9 @@
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   border: 1px solid #fecaca;
   color: #b91c1c;
-}.todayBanner {
+}
+
+.todayBanner {
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
   border: 1px solid #fcd34d;
   color: #b45309;
@@ -346,6 +392,15 @@
   .deadlineBanner {
     padding: 8px 12px;
     font-size: 12px;
+  }
+
+  .deadlineTagName {
+    font-size: 12px;
+  }
+
+  .deadlineCheckbox {
+    width: 14px;
+    height: 14px;
   }
 
   .keyboardOpen .addTaskWrapper {

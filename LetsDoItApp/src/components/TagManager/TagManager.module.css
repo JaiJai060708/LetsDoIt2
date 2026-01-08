@@ -567,6 +567,136 @@
   transform: rotate(90deg);
 }
 
+/* Completed Tags Section */
+.completedSection {
+  margin-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 8px;
+}
+
+.completedToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.completedToggle:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.completedChevron {
+  font-size: 16px;
+  font-weight: 600;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+}
+
+.completedChevron.expanded {
+  transform: rotate(90deg);
+}
+
+.completedLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.completedList {
+  padding: 8px 0;
+  animation: fadeInList 0.2s ease;
+}
+
+@keyframes fadeInList {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.completedTagItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  opacity: 0.7;
+  transition: all 0.15s ease;
+}
+
+.completedTagItem:hover {
+  opacity: 1;
+  background: #f1f5f9;
+}
+
+.completedTagInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.completedTagColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.completedTagName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  text-decoration: line-through;
+}
+
+.completedTagDeadline {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: 4px;
+}
+
+.restoreBtn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  opacity: 0;
+}
+
+.completedTagItem:hover .restoreBtn {
+  opacity: 1;
+}
+
+.restoreBtn:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .modal {
@@ -593,6 +723,8 @@
   .addForm {
     padding: 16px;
   }
+
+  .restoreBtn {
+    opacity: 1;
+  }
 }
-
-

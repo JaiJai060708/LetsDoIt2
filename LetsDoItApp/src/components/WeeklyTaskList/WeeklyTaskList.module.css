@@ -279,9 +279,21 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 4px 8px;
+  min-height: 8px;
+  background: transparent;
+  transition: background 0.15s ease, min-height 0.15s ease;
+}
+
+.dayDeadlines.hasTags {
   padding: 6px 8px;
   background: rgba(255, 255, 255, 0.3);
   border-bottom: 1px solid var(--border-light);
+}
+
+.dayDeadlines.dragOver {
+  background: rgba(50, 163, 188, 0.15);
+  min-height: 40px;
 }
 
 .deadlineChip {
@@ -293,7 +305,40 @@
   font-weight: 600;
   border-radius: 6px;
   border: 1px solid;
-  animation: fadeIn 0.3s ease;
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  user-select: none;
+}
+
+.deadlineChip:hover {
+  transform: scale(1.02);
+}
+
+.deadlineChip.dragging {
+  cursor: grabbing;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+  z-index: 100;
+}
+
+.deadlineChip.completed {
+  opacity: 0.6;
+}
+
+.deadlineChip.completed .deadlineName {
+  text-decoration: line-through;
+}
+
+.deadlineChip.completed:hover {
+  opacity: 0.9;
+}
+
+.deadlineCheckbox {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
+  accent-color: currentColor;
+  flex-shrink: 0;
 }
 
 @keyframes fadeIn {
@@ -311,11 +356,11 @@
   white-space: nowrap;
 }
 
-.deadlineChip.overdue {
+.deadlineChip.overdue:not(.completed) {
   animation: pulse 2s ease-in-out infinite;
 }
 
-.deadlineChip.dueToday {
+.deadlineChip.dueToday:not(.completed) {
   animation: glow 1.5s ease-in-out infinite;
 }
 
@@ -331,9 +376,18 @@
 
 @media (max-width: 768px) {
   .dayDeadlines {
-    padding: 4px 6px;
+    padding: 3px 6px;
     flex-direction: row;
     flex-wrap: wrap;
+    min-height: 6px;
+  }
+
+  .dayDeadlines.hasTags {
+    padding: 4px 6px;
+  }
+
+  .dayDeadlines.dragOver {
+    min-height: 30px;
   }
 
   .deadlineChip {
@@ -344,7 +398,16 @@
 
 @media (max-width: 480px) {
   .dayDeadlines {
+    padding: 2px 4px;
+    min-height: 4px;
+  }
+
+  .dayDeadlines.hasTags {
     padding: 3px 4px;
+  }
+
+  .dayDeadlines.dragOver {
+    min-height: 24px;
   }
 
   .deadlineChip {

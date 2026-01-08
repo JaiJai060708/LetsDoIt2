@@ -290,6 +290,26 @@ export async function updateTag(tagId, updates) {
 }
 
 /**
+ * Mark a tag as complete or uncomplete
+ * @param {string} tagId - The tag ID
+ * @param {boolean} isComplete - Whether to mark as complete (true) or uncomplete (false)
+ */
+export async function completeTag(tagId, isComplete = true) {
+  const tags = await getAvailableTags();
+  const index = tags.findIndex(t => t.id === tagId);
+  if (index !== -1) {
+    tags[index] = {
+      ...tags[index],
+      completedAt: isComplete ? new Date().toISOString() : null,
+    };
+    await setSetting('availableTags', tags);
+    await updateLocalDataTimestamp();
+    triggerAutoSync();
+  }
+  return tags;
+}
+
+/**
  * Delete a tag
  */
 export async function deleteTag(tagId) {

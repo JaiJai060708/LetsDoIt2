@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getAvailableTags, addTag, updateTag, deleteTag } from '../../db/database';
+import { getAvailableTags, addTag, updateTag, deleteTag, completeTag } from '../../db/database';
 import styles from './TagManager.module.css';
 
 // Predefined color palette for tags
@@ -29,8 +29,13 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0].color);
   const [newTagDeadline, setNewTagDeadline] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [showCompleted, setShowCompleted] = useState(false);
   const editInputRef = useRef(null);
   const newInputRef = useRef(null);
+
+  // Filter tags into active and completed (only tags with deadlines can be completed)
+  const activeTags = tags.filter(tag => !tag.completedAt);
+  const completedTags = tags.filter(tag => tag.completedAt && tag.deadline);
 
   useEffect(() => {
     if (isOpen) {
@@ -66,7 +71,15 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
     setEditingId(null);
     setIsAdding(false);
     setDeleteConfirmId(null);
+    setShowCompleted(false);
     onClose();
+  };
+
+  // Uncomplete a tag (restore it)
+  const handleUncompleteTag = async (tagId) => {
+    await completeTag(tagId, false);
+    await loadTags();
+    onTagsChanged?.();
   };
 
   const handleStartEdit = (tag) => {
@@ -158,15 +171,16 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
         </header>
 
         <div className={styles.content}>
-          {tags.length === 0 && !isAdding ? (
+          {activeTags.length === 0 && !isAdding && completedTags.length === 0 ? (
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🏷️</div>
               <p className={styles.emptyTitle}>No tags yet</p>
               <p className={styles.emptyText}>Create your first tag to organize your tasks</p>
             </div>
           ) : (
+            <>
             <div className={styles.tagList}>
-              {tags.map((tag) => (
+              {activeTags.map((tag) => (
                 <div key={tag.id} className={styles.tagItem}>
                   {deleteConfirmId === tag.id ? (
                     <div className={styles.deleteConfirm}>
@@ -294,6 +308,57 @@ function TagManager({ isOpen, onClose, onTagsChanged }) {
                 </div>
               ))}
             </div>
+
+            {/* Completed tags section (hidden by default) */}
+            {completedTags.length > 0 && (
+              <div className={styles.completedSection}>
+                <button
+                  type="button"
+                  className={styles.completedToggle}
+                  onClick={() => setShowCompleted(!showCompleted)}
+                >
+                  <span className={`${styles.completedChevron} ${showCompleted ? styles.expanded : ''}`}>›</span>
+                  <span className={styles.completedLabel}>Completed ({completedTags.length})</span>
+                </button>
+                {showCompleted && (
+                  <div className={styles.completedList}>
+                    {completedTags.map((tag) => (
+                      <div key={tag.id} className={styles.completedTagItem}>
+                        <div className={styles.completedTagInfo}>
+                          <span
+                            className={styles.completedTagColor}
+                            style={{ backgroundColor: tag.color }}
+                          />
+                          <span className={styles.completedTagName}>{tag.name}</span>
+                          {tag.deadline && (
+                            <span className={styles.completedTagDeadline}>
+                              📅 {(() => {
+                                const dl = tag.deadline;
+                                if (dl.includes('T')) return new Date(dl).toLocaleDateString();
+                                const [y, m, d] = dl.split('-').map(Number);
+                                return new Date(y, m - 1, d).toLocaleDateString();
+                              })()}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          className={styles.restoreBtn}
+                          onClick={() => handleUncompleteTag(tag.id)}
+                          aria-label="Restore tag"
+                          title="Restore tag"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            </>
           )}
 
           {isAdding && (

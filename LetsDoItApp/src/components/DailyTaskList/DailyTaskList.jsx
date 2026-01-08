@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { getAllTasks, updateTask, getSectionExpandStates, setSectionExpandState, getHabitByDate, getAvailableTags } from '../../db/database';
+import { getAllTasks, updateTask, getSectionExpandStates, setSectionExpandState, getHabitByDate, getAvailableTags, completeTag } from '../../db/database';
 import { categorizeDailyTasks, sortTasks, getTodayDateString, addDaysToDateString, isToday, isTomorrow, isPast, parseDateString } from '../../utils/dateUtils';
 import { getTodayKey } from '../../utils/habitUtils';
 import TaskList from '../TaskList';
@@ -72,7 +72,8 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
       const overdue = [];
 
       tags.forEach((tag) => {
-        if (!tag.deadline) return;
+        // Skip tags without deadline or already completed
+        if (!tag.deadline || tag.completedAt) return;
         const deadlineDate = parseLocalDate(tag.deadline);
         if (!deadlineDate) return;
         
@@ -90,6 +91,12 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
       console.error('Failed to load tag deadlines:', error);
     }
   }, []);
+
+  // Handle completing a tag with deadline
+  const handleCompleteTag = async (tagId) => {
+    await completeTag(tagId, true);
+    loadTagDeadlines();
+  };
 
   const loadTasks = useCallback(async () => {
     try {
@@ -405,37 +412,67 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
             {tagDeadlines.overdue.length > 0 && (
               <div className={`${styles.deadlineBanner} ${styles.overdueBanner}`}>
                 <span className={styles.deadlineBannerIcon}>⚠️</span>
-                <span className={styles.deadlineBannerText}>
-                  Overdue: {tagDeadlines.overdue.map((t, i) => (
-                    <span key={t.id} className={styles.deadlineTag} style={{ color: t.color }}>
-                      {t.name}{i < tagDeadlines.overdue.length - 1 ? ', ' : ''}
-                    </span>
-                  ))}
-                </span>
+                <div className={styles.deadlineBannerContent}>
+                  <span className={styles.deadlineBannerLabel}>Overdue</span>
+                  <div className={styles.deadlineTagList}>
+                    {tagDeadlines.overdue.map((t) => (
+                      <label key={t.id} className={styles.deadlineTagItem}>
+                        <input
+                          type="checkbox"
+                          className={styles.deadlineCheckbox}
+                          onChange={() => handleCompleteTag(t.id)}
+                        />
+                        <span className={styles.deadlineTagName} style={{ color: t.color }}>
+                          {t.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
             {tagDeadlines.today.length > 0 && (
               <div className={`${styles.deadlineBanner} ${styles.todayBanner}`}>
                 <span className={styles.deadlineBannerIcon}>🔥</span>
-                <span className={styles.deadlineBannerText}>
-                  Due Today: {tagDeadlines.today.map((t, i) => (
-                    <span key={t.id} className={styles.deadlineTag} style={{ color: t.color }}>
-                      {t.name}{i < tagDeadlines.today.length - 1 ? ', ' : ''}
-                    </span>
-                  ))}
-                </span>
+                <div className={styles.deadlineBannerContent}>
+                  <span className={styles.deadlineBannerLabel}>Due Today</span>
+                  <div className={styles.deadlineTagList}>
+                    {tagDeadlines.today.map((t) => (
+                      <label key={t.id} className={styles.deadlineTagItem}>
+                        <input
+                          type="checkbox"
+                          className={styles.deadlineCheckbox}
+                          onChange={() => handleCompleteTag(t.id)}
+                        />
+                        <span className={styles.deadlineTagName} style={{ color: t.color }}>
+                          {t.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
             {tagDeadlines.tomorrow.length > 0 && (
               <div className={`${styles.deadlineBanner} ${styles.tomorrowBanner}`}>
                 <span className={styles.deadlineBannerIcon}>📅</span>
-                <span className={styles.deadlineBannerText}>
-                  Due Tomorrow: {tagDeadlines.tomorrow.map((t, i) => (
-                    <span key={t.id} className={styles.deadlineTag} style={{ color: t.color }}>
-                      {t.name}{i < tagDeadlines.tomorrow.length - 1 ? ', ' : ''}
-                    </span>
-                  ))}
-                </span>
+                <div className={styles.deadlineBannerContent}>
+                  <span className={styles.deadlineBannerLabel}>Due Tomorrow</span>
+                  <div className={styles.deadlineTagList}>
+                    {tagDeadlines.tomorrow.map((t) => (
+                      <label key={t.id} className={styles.deadlineTagItem}>
+                        <input
+                          type="checkbox"
+                          className={styles.deadlineCheckbox}
+                          onChange={() => handleCompleteTag(t.id)}
+                        />
+                        <span className={styles.deadlineTagName} style={{ color: t.color }}>
+                          {t.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
