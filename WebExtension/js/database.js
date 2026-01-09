@@ -394,6 +394,24 @@ export async function addTag(tag) {
   return newTag;
 }
 
+/**
+ * Complete or uncomplete a tag (for tags with deadlines)
+ */
+export async function completeTag(tagId, isComplete = true) {
+  const tags = await getAvailableTags();
+  const index = tags.findIndex(t => t.id === tagId);
+  if (index !== -1) {
+    tags[index] = {
+      ...tags[index],
+      completedAt: isComplete ? new Date().toISOString() : null,
+    };
+    await setSetting('availableTags', tags);
+    await updateLocalDataTimestamp();
+    triggerAutoSync();
+  }
+  return tags;
+}
+
 // ============================================
 // Habit Tracking Functions
 // ============================================

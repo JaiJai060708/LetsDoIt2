@@ -850,6 +850,243 @@ body {
   height: 18px;
 }
 
+/* Tag Picker */
+.tag-picker-wrapper {
+  position: relative;
+}
+
+.tag-btn {
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: white;
+  border: 1px solid var(--border-medium);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0 8px;
+}
+
+.tag-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+}
+
+.tag-btn.has-selection {
+  background: var(--primary-light);
+  border-color: var(--primary-color);
+}
+
+/* Tag Indicators inside button */
+.tag-indicators {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.tag-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.tag-more {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-left: 2px;
+}
+
+/* Tag Dropdown */
+.tag-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 200px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  animation: dropUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes dropUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tag-dropdown-header {
+  padding: 10px 12px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.tag-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.no-tags {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 16px 10px;
+  margin: 0;
+}
+
+.tag-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tag-option:hover {
+  background: var(--bg-hover);
+}
+
+.tag-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tag-preview {
+  display: inline-flex;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid;
+}
+
+/* Completed Tags Section */
+.completed-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.completed-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.completed-chevron {
+  font-size: 12px;
+  font-weight: 600;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+}
+
+.completed-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.completed-label {
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.completed-list {
+  padding: 4px 6px 6px;
+  animation: fadeInList 0.2s ease;
+}
+
+@keyframes fadeInList {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.completed-tag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.completed-tag-row:hover {
+  background: var(--bg-hover);
+}
+
+.completed-tag-row:hover .restore-btn {
+  opacity: 1;
+}
+
+.completed-tag-preview {
+  display: inline-flex;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1px solid;
+  opacity: 0.7;
+  text-decoration: line-through;
+}
+
+.restore-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  opacity: 0;
+}
+
+.restore-btn:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+
 /* Modal Overlay */
 .modal-overlay {
   position: fixed;

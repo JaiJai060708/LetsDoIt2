@@ -47,7 +47,7 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
     if (!compact && !isMobile) {
       inputRef.current?.focus();
     }
-    loadTags();
+    loadTags(true); // true = initial load, sets default tag
   }, [compact]);
 
   useEffect(() => {
@@ -73,9 +73,17 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
     }
   }, [editingTag]);
 
-  const loadTags = async () => {
+  const loadTags = async (isInitialLoad = false) => {
     const tags = await getAvailableTags();
     setAvailableTags(tags);
+    
+    // Set "personal" tag as default on initial load
+    if (isInitialLoad) {
+      const personalTag = tags.find(tag => tag.name.toLowerCase() === 'personal');
+      if (personalTag) {
+        setSelectedTags([personalTag.id]);
+      }
+    }
   };
 
   const closeTagPicker = () => {
@@ -218,23 +226,6 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
           onChange={(e) => setContent(e.target.value)}
           disabled={isSubmitting}
         />
-        {selectedTags.length > 0 && (
-          <div className={styles.selectedTags}>
-            {selectedTags.map((tagId) => {
-              const tag = getTagById(tagId);
-              if (!tag) return null;
-              return (
-                <span
-                  key={tag.id}
-                  className={styles.selectedTag}
-                  style={{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color }}
-                >
-                  {tag.name}
-                </span>
-              );
-            })}
-          </div>
-        )}
       </div>
       
       <div className={styles.tagPickerWrapper} ref={tagPickerRef}>
@@ -244,7 +235,27 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
           onClick={() => setShowTagPicker(!showTagPicker)}
           title="Add tags"
         >
-          🏷️
+          {selectedTags.length > 0 ? (
+            <div className={styles.tagIndicators}>
+              {selectedTags.slice(0, 3).map((tagId) => {
+                const tag = getTagById(tagId);
+                if (!tag) return null;
+                return (
+                  <span
+                    key={tag.id}
+                    className={styles.tagDot}
+                    style={{ backgroundColor: tag.color }}
+                    title={tag.name}
+                  />
+                );
+              })}
+              {selectedTags.length > 3 && (
+                <span className={styles.tagMore}>+{selectedTags.length - 3}</span>
+              )}
+            </div>
+          ) : (
+            '🏷️'
+          )}
         </button>
         
         {showTagPicker && (

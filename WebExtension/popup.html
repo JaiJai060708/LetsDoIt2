@@ -69,6 +69,13 @@
         </svg>
       </button>
       <input type="text" id="newTaskInput" class="add-task-input" placeholder="Add a new task...">
+      <div class="tag-picker-wrapper" id="tagPickerWrapper">
+        <button class="tag-btn" id="tagBtn" title="Add tags">🏷️</button>
+        <div class="tag-dropdown" id="tagDropdown" style="display: none;">
+          <div class="tag-dropdown-header">Tags</div>
+          <div class="tag-list" id="tagList"></div>
+        </div>
+      </div>
       <button class="add-task-btn" id="addTaskBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 5v14M5 12h14" />

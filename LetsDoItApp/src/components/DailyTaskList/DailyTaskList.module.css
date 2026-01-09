@@ -248,7 +248,7 @@
 
 .deadlineBanner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   padding: 10px 14px;
   border-radius: 10px;
@@ -271,7 +271,6 @@
 .deadlineBannerIcon {
   font-size: 16px;
   flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .deadlineBannerContent {
@@ -292,14 +291,13 @@
 .deadlineTagList {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-left: 4px;
+  gap: 8px;
 }
 
 .deadlineTagItem {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   padding: 2px 0;
 }
@@ -330,9 +328,7 @@
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   border: 1px solid #fecaca;
   color: #b91c1c;
-}
-
-.todayBanner {
+}.todayBanner {
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
   border: 1px solid #fcd34d;
   color: #b45309;
@@ -392,15 +388,6 @@
   .deadlineBanner {
     padding: 8px 12px;
     font-size: 12px;
-  }
-
-  .deadlineTagName {
-    font-size: 12px;
-  }
-
-  .deadlineCheckbox {
-    width: 14px;
-    height: 14px;
   }
 
   .keyboardOpen .addTaskWrapper {

@@ -6,6 +6,7 @@ import {
   updateTask, 
   deleteTask, 
   getAvailableTags,
+  completeTag,
   getSectionExpandStates,
   setSectionExpandState,
   getHabitByDate,
@@ -69,6 +70,7 @@ let tasks = {
 let expandStates = {};
 let showHappinessTask = false;
 let availableTags = [];
+let selectedTags = []; // Tags selected for new task
 let selectedHappinessScore = null;
 let syncState = SYNC_STATE.DISABLED;
 let syncEnabled = false;
@@ -125,6 +127,10 @@ const closeHappinessModal = document.getElementById('closeHappinessModal');
 const changeScoreBtn = document.getElementById('changeScoreBtn');
 const backBtn = document.getElementById('backBtn');
 const submitHappinessBtn = document.getElementById('submitHappinessBtn');
+const tagPickerWrapper = document.getElementById('tagPickerWrapper');
+const tagBtn = document.getElementById('tagBtn');
+const tagDropdown = document.getElementById('tagDropdown');
+const tagList = document.getElementById('tagList');
 
 // Initialize
 async function init() {
@@ -325,6 +331,160 @@ function hideSyncTooltip() {
 // Load tags
 async function loadTags() {
   availableTags = await getAvailableTags();
+  
+  // Set "personal" tag as default
+  const personalTag = availableTags.find(tag => tag.name.toLowerCase() === 'personal');
+  if (personalTag && !personalTag.completedAt) {
+    selectedTags = [personalTag.id];
+  }
+  
+  updateTagButton();
+}
+
+// Update tag button to show selected tags as colored dots
+function updateTagButton() {
+  if (selectedTags.length === 0) {
+    tagBtn.innerHTML = '🏷️';
+    tagBtn.classList.remove('has-selection');
+  } else {
+    tagBtn.classList.add('has-selection');
+    let html = '<div class="tag-indicators">';
+    
+    // Show up to 3 tag dots
+    selectedTags.slice(0, 3).forEach(tagId => {
+      const tag = getTagById(tagId);
+      if (tag) {
+        html += `<span class="tag-dot" style="background-color: ${tag.color}" title="${tag.name}"></span>`;
+      }
+    });
+    
+    // Show +N if more than 3
+    if (selectedTags.length > 3) {
+      html += `<span class="tag-more">+${selectedTags.length - 3}</span>`;
+    }
+    
+    html += '</div>';
+    tagBtn.innerHTML = html;
+  }
+}
+
+// State for completed tags visibility
+let showCompletedTags = false;
+
+// Render tag list in dropdown
+function renderTagList() {
+  const activeTags = availableTags.filter(tag => !tag.completedAt);
+  const completedTags = availableTags.filter(tag => tag.completedAt && tag.deadline);
+  
+  let html = '';
+  
+  if (activeTags.length === 0 && completedTags.length === 0) {
+    html = '<p class="no-tags">No tags available</p>';
+  } else {
+    // Active tags
+    if (activeTags.length === 0) {
+      html += '<p class="no-tags">No active tags</p>';
+    } else {
+      html += activeTags.map(tag => `
+        <label class="tag-option">
+          <input type="checkbox" ${selectedTags.includes(tag.id) ? 'checked' : ''} data-tag-id="${tag.id}">
+          <span class="tag-preview" style="background-color: ${tag.color}20; color: ${tag.color}; border-color: ${tag.color}">
+            ${tag.name}
+          </span>
+        </label>
+      `).join('');
+    }
+    
+    // Completed tags section
+    if (completedTags.length > 0) {
+      html += `
+        <button class="completed-toggle" id="completedToggle">
+          <span class="completed-chevron ${showCompletedTags ? 'expanded' : ''}">›</span>
+          <span class="completed-label">Completed (${completedTags.length})</span>
+        </button>
+      `;
+      
+      if (showCompletedTags) {
+        html += '<div class="completed-list">';
+        html += completedTags.map(tag => `
+          <div class="completed-tag-row">
+            <span class="completed-tag-preview" style="background-color: ${tag.color}20; color: ${tag.color}; border-color: ${tag.color}">
+              ${tag.name}
+            </span>
+            <button class="restore-btn" data-tag-id="${tag.id}" title="Restore tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+            </button>
+          </div>
+        `).join('');
+        html += '</div>';
+      }
+    }
+  }
+  
+  tagList.innerHTML = html;
+  
+  // Add event listeners for checkboxes
+  tagList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const tagId = e.target.dataset.tagId;
+      handleTagToggle(tagId);
+    });
+  });
+  
+  // Add event listener for completed toggle
+  const completedToggle = tagList.querySelector('#completedToggle');
+  if (completedToggle) {
+    completedToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showCompletedTags = !showCompletedTags;
+      renderTagList();
+    });
+  }
+  
+  // Add event listeners for restore buttons
+  tagList.querySelectorAll('.restore-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const tagId = btn.dataset.tagId;
+      await handleRestoreTag(tagId);
+    });
+  });
+}
+
+// Toggle tag selection
+function handleTagToggle(tagId) {
+  if (selectedTags.includes(tagId)) {
+    selectedTags = selectedTags.filter(id => id !== tagId);
+  } else {
+    selectedTags.push(tagId);
+  }
+  updateTagButton();
+}
+
+// Restore a completed tag
+async function handleRestoreTag(tagId) {
+  await completeTag(tagId, false);
+  await loadTags();
+  renderTagList();
+}
+
+// Toggle tag dropdown
+function toggleTagDropdown() {
+  const isVisible = tagDropdown.style.display !== 'none';
+  if (isVisible) {
+    tagDropdown.style.display = 'none';
+  } else {
+    renderTagList();
+    tagDropdown.style.display = 'block';
+  }
+}
+
+// Close tag dropdown
+function closeTagDropdown() {
+  tagDropdown.style.display = 'none';
 }
 
 // Load tasks
@@ -685,12 +845,19 @@ async function handleAddTask() {
     dueDate: todayDateStr,
     note: pendingTaskNote,
     doneAt: null,
-    tags: [],
+    tags: [...selectedTags],
   });
 
   newTaskInput.value = '';
   pendingTaskNote = null;
   updateCaptureButtonState();
+  closeTagDropdown();
+  
+  // Reset to default "personal" tag
+  const personalTag = availableTags.find(tag => tag.name.toLowerCase() === 'personal');
+  selectedTags = personalTag && !personalTag.completedAt ? [personalTag.id] : [];
+  updateTagButton();
+  
   await loadTasks();
   renderSections();
 }
@@ -789,6 +956,19 @@ function setupEventListeners() {
     if (newTaskInput.value === '' && pendingTaskNote) {
       pendingTaskNote = null;
       updateCaptureButtonState();
+    }
+  });
+  
+  // Tag picker
+  tagBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleTagDropdown();
+  });
+  
+  // Close tag dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!tagPickerWrapper.contains(e.target)) {
+      closeTagDropdown();
     }
   });
 
