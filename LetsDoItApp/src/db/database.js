@@ -717,8 +717,8 @@ export async function getGoogleDriveSyncSettings() {
   const settings = await getSetting('googleDriveSync');
   return settings || {
     enabled: false,
-    shareLink: '',
-    writeEndpoint: '', // Google Apps Script Web App URL for writing
+    fileId: '', // Google Drive file ID
+    scriptEndpoint: '', // Google Apps Script Web App URL (handles both read and write)
     lastSyncAt: null,
     autoSync: false,
   };
@@ -735,49 +735,41 @@ export async function setGoogleDriveSyncSettings(settings) {
 }
 
 /**
- * Convert a Google Drive share link to a direct download URL
- * Handles formats like:
+ * Extract file ID from Google Drive share link or URL
+ * Supports formats like:
  * - https://drive.google.com/file/d/FILE_ID/view?usp=sharing
  * - https://drive.google.com/open?id=FILE_ID
+ * - Just the FILE_ID itself
  */
-export function convertGoogleDriveLinkToDirectUrl(shareLink) {
-  if (!shareLink) return null;
+export function extractGoogleDriveFileId(input) {
+  if (!input) return null;
   
-  let url = shareLink.trim();
+  const trimmed = input.trim();
   
-  // Extract file ID from various Google Drive URL formats
-  let fileId = null;
+  // If it's already just an ID (no slashes or query params), return it
+  if (!trimmed.includes('/') && !trimmed.includes('?') && trimmed.length > 20) {
+    return trimmed;
+  }
   
   // Format: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-  const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const fileMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (fileMatch) {
-    fileId = fileMatch[1];
+    return fileMatch[1];
   }
   
   // Format: https://drive.google.com/open?id=FILE_ID
-  if (!fileId) {
-    const openMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (openMatch) {
-      fileId = openMatch[1];
-    }
+  const openMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (openMatch) {
+    return openMatch[1];
   }
   
-  // Format: https://drive.google.com/uc?id=FILE_ID&export=download (already direct)
-  if (!fileId) {
-    const ucMatch = url.match(/\/uc\?.*id=([a-zA-Z0-9_-]+)/);
-    if (ucMatch) {
-      fileId = ucMatch[1];
-    }
+  // Format: https://drive.google.com/uc?id=FILE_ID&export=download
+  const ucMatch = trimmed.match(/\/uc\?.*id=([a-zA-Z0-9_-]+)/);
+  if (ucMatch) {
+    return ucMatch[1];
   }
   
-  return fileId;
-}
-
-/**
- * Extract file ID from Google Drive share link
- */
-export function extractGoogleDriveFileId(shareLink) {
-  return convertGoogleDriveLinkToDirectUrl(shareLink);
+  return null;
 }
 
 /**
@@ -811,78 +803,93 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
 }
 
 /**
- * Fetch data from a Google Drive shared file
- * Uses multiple CORS proxies with fallback for reliability
- * Includes cache-busting to always get fresh data
+ * Fetch data from Google Drive using Google Apps Script
+ * 
+ * IMPORTANT: We must NOT send custom headers (Cache-Control, Pragma, etc.)
+ * because they trigger a CORS preflight (OPTIONS) request that Google Apps Script
+ * cannot handle. We use a simple GET with only a cache-buster query parameter.
+ * 
+ * @param {string} scriptEndpoint - The Google Apps Script Web App URL
+ * @param {string} fileId - The Google Drive file ID
+ * @returns {Promise<Object>} The parsed JSON data from the file
  */
-export async function fetchFromGoogleDrive(shareLink) {
-  const fileId = extractGoogleDriveFileId(shareLink);
+export async function fetchFromGoogleDrive(scriptEndpoint, fileId) {
+  if (!scriptEndpoint) {
+    throw new Error('Google Apps Script endpoint is required. Please configure it in Settings.');
+  }
   
   if (!fileId) {
-    throw new Error('Invalid Google Drive share link');
+    throw new Error('Google Drive file ID is required. Please configure it in Settings.');
   }
   
-  // Add cache-busting timestamp to the URL
-  const cacheBuster = Date.now();
-  const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}&_cb=${cacheBuster}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
   
-  // List of CORS proxies to try (in order of preference)
-  // Each proxy URL includes a cache-buster parameter
-  const corsProxies = [
-    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}&_t=${cacheBuster}`,
-    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}&_t=${cacheBuster}`,
-    (url) => `https://cors-anywhere.herokuapp.com/${url}`,
-  ];
-  
-  let lastError = null;
-  
-  // Try each proxy until one works
-  for (const proxyFn of corsProxies) {
-    const proxyUrl = proxyFn(directUrl);
+  try {
+    console.log('Fetching from Google Drive via Apps Script...');
+    const cacheBuster = Date.now();
+    const url = `${scriptEndpoint}?fileId=${encodeURIComponent(fileId)}&_cb=${cacheBuster}`;
     
-    try {
-      console.log(`Trying CORS proxy: ${proxyUrl.split('?')[0]}... (cache-buster: ${cacheBuster})`);
-      const response = await fetchWithTimeout(proxyUrl, {}, 20000);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const text = await response.text();
-      
-      // Check if we got an HTML error page instead of JSON
-      if (text.trim().startsWith('<!') || text.trim().startsWith('<html')) {
-        throw new Error('Received HTML instead of JSON - file may not be publicly accessible');
-      }
-      
-      // Try to parse as JSON
-      try {
-        const data = JSON.parse(text);
-        console.log('Successfully fetched fresh data from Google Drive');
-        return data;
-      } catch (e) {
-        throw new Error('Failed to parse response as JSON');
-      }
-    } catch (error) {
-      console.warn(`Proxy failed: ${error.message}`);
-      lastError = error;
-      // Continue to next proxy
+    // Simple fetch with NO custom headers to avoid CORS preflight
+    const response = await fetch(url, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    
+    // Check for error in response
+    if (data.error) {
+      throw new Error(data.message || data.error);
+    }
+    
+    console.log('✓ Successfully fetched data from Google Drive');
+    return data;
+    
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error('✗ Failed to fetch from Google Drive:', error.message);
+    
+    // Provide helpful error message
+    let errorMsg = `Sync failed: ${error.message}\n\n`;
+    
+    if (error.name === 'AbortError') {
+      errorMsg = `Request timed out.\n\nCheck that your Apps Script URL is correct and the script is deployed.`;
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMsg += `Check that:\n`;
+      errorMsg += `1. Your Apps Script URL is correct\n`;
+      errorMsg += `2. The script is deployed as a Web App with "Who has access" set to "Anyone"\n`;
+      errorMsg += `3. You authorized the script when deploying\n`;
+    } else if (error.message.includes('File') || error.message.includes('file')) {
+      errorMsg += `Check that:\n`;
+      errorMsg += `1. The file ID is correct\n`;
+      errorMsg += `2. The file exists in YOUR Google Drive\n`;
+      errorMsg += `3. The file contains valid JSON data\n`;
+    }
+    
+    throw new Error(errorMsg);
   }
-  
-  // All proxies failed
-  throw new Error(`Failed to fetch from Google Drive after trying all proxies. Last error: ${lastError?.message || 'Unknown error'}. Make sure the file is shared publicly ("Anyone with the link can view").`);
 }
 
 /**
- * Push data to Google Drive using a Google Apps Script Web App
- * The web app URL should be set in writeEndpoint setting
+ * Push data to Google Drive using Google Apps Script
+ * Uses the same endpoint as reading (handles both GET and POST)
  */
 export async function pushToGoogleDrive() {
   const settings = await getGoogleDriveSyncSettings();
   
-  if (!settings.writeEndpoint) {
-    throw new Error('No write endpoint configured. Please set up a Google Apps Script Web App.');
+  if (!settings.scriptEndpoint) {
+    throw new Error('Google Apps Script endpoint not configured. Please set it up in Settings.');
+  }
+  
+  if (!settings.fileId) {
+    throw new Error('Google Drive file ID not configured. Please set it up in Settings.');
   }
   
   // Export all local data
@@ -896,17 +903,36 @@ export async function pushToGoogleDrive() {
   };
   
   try {
-    const response = await fetch(settings.writeEndpoint, {
+    console.log('Pushing data to Google Drive via Apps Script...');
+    
+    // Use 'text/plain' content type to avoid CORS preflight
+    // (application/json triggers preflight, text/plain does not)
+    // The Apps Script doPost() can still parse JSON from text/plain body
+    const response = await fetch(`${settings.scriptEndpoint}?fileId=${encodeURIComponent(settings.fileId)}`, {
       method: 'POST',
-      mode: 'no-cors', // Google Apps Script requires no-cors for POST
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
       },
       body: JSON.stringify(syncData),
     });
     
-    // Note: with no-cors mode, we can't read the response
-    // We'll assume success if no error is thrown
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      // If we can't parse response, assume success if status was OK
+      result = { success: true };
+    }
+    
+    if (result.error) {
+      throw new Error(result.message || result.error);
+    }
+    
+    console.log('✓ Successfully pushed data to Google Drive');
     
     // Update last sync timestamp
     await setGoogleDriveSyncSettings({
@@ -924,7 +950,7 @@ export async function pushToGoogleDrive() {
 }
 
 /**
- * Sync data with Google Drive
+ * Sync data with Google Drive using Google Apps Script
  * Compares local and remote timestamps and syncs accordingly:
  * - FIRST SYNC (never synced before): Always pull from Google Drive, replacing local data
  * - If remote is newer: pull from Google Drive
@@ -934,15 +960,19 @@ export async function pushToGoogleDrive() {
 export async function syncFromGoogleDrive() {
   const settings = await getGoogleDriveSyncSettings();
   
-  if (!settings.shareLink) {
-    throw new Error('No Google Drive share link configured');
+  if (!settings.scriptEndpoint) {
+    throw new Error('Google Apps Script endpoint not configured. Please set it up in Settings.');
+  }
+  
+  if (!settings.fileId) {
+    throw new Error('Google Drive file ID not configured. Please set it up in Settings.');
   }
   
   // Check if this is the first sync (never synced before)
   const isFirstSync = !settings.lastSyncAt;
   
-  // Fetch remote data
-  const remoteData = await fetchFromGoogleDrive(settings.shareLink);
+  // Fetch remote data from Google Drive via Apps Script
+  const remoteData = await fetchFromGoogleDrive(settings.scriptEndpoint, settings.fileId);
   
   // Get timestamps
   const localModifiedAt = await getLocalDataModifiedAt();
@@ -979,8 +1009,8 @@ export async function syncFromGoogleDrive() {
   const localTime = localModifiedAt ? new Date(localModifiedAt).getTime() : 0;
   const remoteTime = remoteModifiedAt ? new Date(remoteModifiedAt).getTime() : 0;
   
-  // If local is newer and we have a write endpoint, push
-  if (localTime > remoteTime && settings.writeEndpoint) {
+  // If local is newer, push to Google Drive
+  if (localTime > remoteTime) {
     console.log('Local data is newer, pushing to Google Drive...');
     const result = await pushToGoogleDrive();
     return {
@@ -990,7 +1020,7 @@ export async function syncFromGoogleDrive() {
     };
   }
   
-  // If remote is newer, pull
+  // If remote is newer, pull from Google Drive
   if (remoteTime > localTime) {
     console.log('Remote data is newer, pulling from Google Drive...');
     // Use preserveLocalTimestamp: true so we can set it to remote timestamp ourselves
@@ -1013,22 +1043,6 @@ export async function syncFromGoogleDrive() {
       habitsImported: importResult.habitsImported,
       localTimestamp: localModifiedAt,
       remoteTimestamp: remoteModifiedAt,
-    };
-  }
-  
-  // If local is newer but no write endpoint, still report success but note that push isn't available
-  if (localTime > remoteTime && !settings.writeEndpoint) {
-    console.log('Local data is newer but no write endpoint configured');
-    // Update last sync timestamp anyway
-    await setGoogleDriveSyncSettings({
-      lastSyncAt: new Date().toISOString(),
-    });
-    
-    return {
-      action: SYNC_RESULT.UP_TO_DATE, // Can't push, so consider it up to date
-      localTimestamp: localModifiedAt,
-      remoteTimestamp: remoteModifiedAt,
-      note: 'Local data is newer. Configure write endpoint to enable push.',
     };
   }
   

@@ -1852,3 +1852,330 @@
     min-height: 260px;
   }
 }
+
+/* Help Banner Styles */
+.helpBanner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 16px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.helpBannerIcon {
+  font-size: 32px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.helpBannerContent {
+  flex: 1;
+}
+
+.helpBannerTitle {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.helpBannerText {
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.helpBannerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.helpBannerList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.helpBannerList li::before {
+  content: "✓";
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+/* Method Card Styles */
+.cloudMethodCard {
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.cloudMethodHeader {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.cloudMethodBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-color);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.cloudMethodBadgeIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.cloudMethodTitle {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cloudMethodDescription {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.cloudMethodSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cloudMethodStep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.cloudMethodStepNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Alternative Method (Details/Summary) */
+.cloudAlternativeMethod {
+  margin: 16px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cloudAlternativeMethodSummary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  user-select: none;
+  list-style: none;
+}
+
+.cloudAlternativeMethodSummary::-webkit-details-marker {
+  display: none;
+}
+
+.cloudAlternativeMethodSummary svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.cloudAlternativeMethodSummary:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.cloudAlternativeMethodContent {
+  padding: 20px;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Warning and Success Boxes */
+.warningBox, .successBox {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.warningBox {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+}
+
+[data-theme="dark"] .warningBox {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+}
+
+.successBox {
+  background: #d4edda;
+  border: 1px solid #28a745;
+  color: #155724;
+}
+
+[data-theme="dark"] .successBox {
+  background: rgba(40, 167, 69, 0.1);
+  border-color: rgba(40, 167, 69, 0.3);
+  color: #28a745;
+}
+
+.warningBox svg, .successBox svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warningBox p, .successBox p {
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.warningBox p:last-child, .successBox p:last-child {
+  margin-bottom: 0;
+}
+
+/* Input Groups with Labels */
+.cloudInputGroup {
+  margin-bottom: 20px;
+}
+
+.cloudInputLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.cloudInputLabel svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+}
+
+.requiredBadge, .optionalBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.requiredBadge {
+  background: var(--primary-color);
+  color: white;
+}
+
+.optionalBadge {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.cloudInputHint {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Improved Cloud Advanced Panel */
+.cloudAdvancedPanel {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.cloudSetupGuideBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 20px;
+}
+
+.cloudSetupGuideBtn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.cloudSetupGuideBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Setup Guide Note Box */
+.setupNote {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .setupNote {
+  background: rgba(255, 193, 7, 0.15);
+  border-color: rgba(255, 193, 7, 0.4);
+}

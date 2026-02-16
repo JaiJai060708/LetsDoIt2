@@ -14,13 +14,12 @@ import {
 } from './database.js';
 
 // State
-let googleDriveLink = '';
-let googleDriveWriteEndpoint = '';
+let googleDriveFileId = '';
+let googleDriveScriptEndpoint = '';
 let googleDriveEnabled = false;
 let googleDriveAutoSync = false;
 let googleDriveLastSyncAt = null;
 let isGoogleDriveSyncing = false;
-let showAdvancedSync = false;
 let isEditing = false;
 let currentTimezone = 'auto';
 
@@ -28,11 +27,8 @@ let currentTimezone = 'auto';
 const statusBadge = document.getElementById('statusBadge');
 const cloudSetup = document.getElementById('cloudSetup');
 const cloudConnected = document.getElementById('cloudConnected');
-const readLinkInput = document.getElementById('readLinkInput');
-const writeLinkInput = document.getElementById('writeLinkInput');
-const advancedToggle = document.getElementById('advancedToggle');
-const advancedChevron = document.getElementById('advancedChevron');
-const advancedPanel = document.getElementById('advancedPanel');
+const fileIdInput = document.getElementById('fileIdInput');
+const scriptEndpointInput = document.getElementById('scriptEndpointInput');
 const connectBtn = document.getElementById('connectBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const cloudFileLink = document.getElementById('cloudFileLink');
@@ -76,7 +72,6 @@ async function init() {
 function loadTimezoneSettings() {
   currentTimezone = getDeviceTimezone();
   
-  // Populate timezone select
   const options = getTimezoneOptions();
   timezoneSelect.innerHTML = '';
   options.forEach(tz => {
@@ -86,20 +81,15 @@ function loadTimezoneSettings() {
     timezoneSelect.appendChild(option);
   });
   
-  // Set current value
   timezoneSelect.value = currentTimezone;
-  
-  // Update effective timezone display
   updateEffectiveTimezoneDisplay();
 }
 
-// Update effective timezone display
 function updateEffectiveTimezoneDisplay() {
   const effective = getEffectiveTimezone();
   effectiveTimezoneEl.textContent = effective;
 }
 
-// Handle timezone change
 function handleTimezoneChange(newTimezone) {
   setDeviceTimezone(newTimezone);
   currentTimezone = newTimezone;
@@ -110,12 +100,11 @@ function handleTimezoneChange(newTimezone) {
 // Load Google Drive settings
 async function loadSettings() {
   const settings = await getGoogleDriveSyncSettings();
-  googleDriveLink = settings.shareLink || '';
-  googleDriveWriteEndpoint = settings.writeEndpoint || '';
+  googleDriveFileId = settings.fileId || '';
+  googleDriveScriptEndpoint = settings.scriptEndpoint || '';
   googleDriveEnabled = settings.enabled || false;
   googleDriveAutoSync = settings.autoSync || false;
   googleDriveLastSyncAt = settings.lastSyncAt || null;
-  showAdvancedSync = !!settings.writeEndpoint;
 }
 
 // Update UI based on state
@@ -126,10 +115,9 @@ function updateUI() {
     cloudConnected.style.display = 'flex';
     statusBadge.style.display = 'flex';
     
-    // Truncate link for display
-    cloudFileLink.textContent = googleDriveLink.length > 50 
-      ? `${googleDriveLink.substring(0, 50)}...` 
-      : googleDriveLink;
+    cloudFileLink.textContent = googleDriveScriptEndpoint.length > 50 
+      ? `${googleDriveScriptEndpoint.substring(0, 50)}...` 
+      : googleDriveScriptEndpoint;
     
     lastSyncTime.textContent = formatLastSync(googleDriveLastSyncAt);
     autoSyncCheckbox.checked = googleDriveAutoSync;
@@ -139,14 +127,13 @@ function updateUI() {
     cloudConnected.style.display = 'none';
     statusBadge.style.display = googleDriveEnabled ? 'flex' : 'none';
     
-    readLinkInput.value = googleDriveLink;
-    writeLinkInput.value = googleDriveWriteEndpoint;
+    fileIdInput.value = googleDriveFileId;
+    scriptEndpointInput.value = googleDriveScriptEndpoint;
     
     cancelEditBtn.style.display = isEditing ? 'block' : 'none';
     connectBtn.textContent = isEditing ? 'Update Connection' : 'Connect to Drive';
     
     updateConnectButtonState();
-    updateAdvancedPanel();
   }
   
   updateScriptCode();
@@ -154,41 +141,49 @@ function updateUI() {
 
 // Update connect button state
 function updateConnectButtonState() {
-  const hasLink = readLinkInput.value.trim().length > 0;
-  connectBtn.disabled = !hasLink && !googleDriveEnabled;
-}
-
-// Update advanced panel visibility
-function updateAdvancedPanel() {
-  advancedPanel.style.display = showAdvancedSync ? 'flex' : 'none';
-  advancedChevron.classList.toggle('rotated', showAdvancedSync);
+  const hasFileId = fileIdInput.value.trim().length > 0;
+  const hasEndpoint = scriptEndpointInput.value.trim().length > 0;
+  connectBtn.disabled = !hasFileId || !hasEndpoint;
 }
 
 // Update script code in setup guide
 function updateScriptCode() {
-  const fileId = extractGoogleDriveFileId(googleDriveLink) || 'YOUR_FILE_ID_HERE';
+  const fileId = googleDriveFileId || 'YOUR_FILE_ID_HERE';
   scriptCode.textContent = `// Google Apps Script for LetsDoIt Sync
 const FILE_ID = '${fileId}';
+
+function doGet(e) {
+  try {
+    const fileId = e.parameter.fileId || FILE_ID;
+    const file = DriveApp.getFileById(fileId);
+    const content = file.getBlob().getDataAsString();
+    const data = JSON.parse(content);
+    data.fetchedAt = new Date().toISOString();
+    data.fetchMethod = 'GoogleAppsScript';
+    return ContentService
+      .createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
 
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const file = DriveApp.getFileById(FILE_ID);
+    const fileId = e.parameter.fileId || FILE_ID;
+    const file = DriveApp.getFileById(fileId);
     file.setContent(JSON.stringify(data, null, 2));
     return ContentService
       .createTextOutput(JSON.stringify({ success: true }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: error.message }))
+      .createTextOutput(JSON.stringify({ error: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
-}
-
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok' }))
-    .setMimeType(ContentService.MimeType.JSON);
 }`;
 }
 
@@ -237,22 +232,17 @@ function setupEventListeners() {
     handleTimezoneChange(e.target.value);
   });
   
-  // Read link input
-  readLinkInput.addEventListener('input', () => {
-    googleDriveLink = readLinkInput.value;
+  // File ID input
+  fileIdInput.addEventListener('input', () => {
+    googleDriveFileId = fileIdInput.value;
     updateConnectButtonState();
     updateScriptCode();
   });
 
-  // Write link input
-  writeLinkInput.addEventListener('input', () => {
-    googleDriveWriteEndpoint = writeLinkInput.value;
-  });
-
-  // Advanced toggle
-  advancedToggle.addEventListener('click', () => {
-    showAdvancedSync = !showAdvancedSync;
-    updateAdvancedPanel();
+  // Script endpoint input
+  scriptEndpointInput.addEventListener('input', () => {
+    googleDriveScriptEndpoint = scriptEndpointInput.value;
+    updateConnectButtonState();
   });
 
   // Connect button
@@ -345,27 +335,31 @@ function setupEventListeners() {
 // Handle connect
 async function handleConnect() {
   try {
+    // Extract file ID if user pasted a full share link
+    const fileId = extractGoogleDriveFileId(googleDriveFileId) || googleDriveFileId;
+    
     await setGoogleDriveSyncSettings({
-      shareLink: googleDriveLink,
-      writeEndpoint: googleDriveWriteEndpoint,
-      enabled: !!googleDriveLink,
+      fileId: fileId,
+      scriptEndpoint: googleDriveScriptEndpoint,
+      enabled: !!(fileId && googleDriveScriptEndpoint),
     });
     
-    googleDriveEnabled = !!googleDriveLink;
+    googleDriveFileId = fileId;
+    googleDriveEnabled = !!(fileId && googleDriveScriptEndpoint);
     isEditing = false;
     
     updateUI();
-    showToast(googleDriveLink ? 'Google Drive settings saved!' : 'Google Drive link removed');
+    showToast('Google Drive sync configured!');
   } catch (error) {
     console.error('Failed to save Google Drive settings:', error);
-    showToast('Failed to save Google Drive settings', 'error');
+    showToast('Failed to save settings', 'error');
   }
 }
 
 // Handle sync
 async function handleSync() {
-  if (!googleDriveLink) {
-    showToast('Please enter a Google Drive share link first', 'error');
+  if (!googleDriveFileId || !googleDriveScriptEndpoint) {
+    showToast('Please configure sync settings first', 'error');
     return;
   }
   
@@ -382,13 +376,13 @@ async function handleSync() {
     switch (result.action) {
       case SYNC_RESULT.PULLED:
         if (result.isFirstSync) {
-          showToast(`First sync complete! Imported ${result.tasksImported} tasks, ${result.habitsImported} habits from cloud`);
+          showToast(`First sync! Imported ${result.tasksImported} tasks, ${result.habitsImported} habits`);
         } else {
-          showToast(`Pulled ${result.tasksImported} tasks, ${result.habitsImported} habits from cloud`);
+          showToast(`Pulled ${result.tasksImported} tasks, ${result.habitsImported} habits`);
         }
         break;
       case SYNC_RESULT.PUSHED:
-        showToast('Data pushed to cloud successfully!');
+        showToast('Data pushed to cloud!');
         break;
       case SYNC_RESULT.UP_TO_DATE:
         showToast(result.note || 'Already up to date');
@@ -409,16 +403,15 @@ async function handleSync() {
 
 // Handle disconnect
 async function handleDisconnect() {
-  googleDriveLink = '';
-  googleDriveWriteEndpoint = '';
+  googleDriveFileId = '';
+  googleDriveScriptEndpoint = '';
   googleDriveEnabled = false;
   googleDriveAutoSync = false;
   googleDriveLastSyncAt = null;
-  showAdvancedSync = false;
   
   await setGoogleDriveSyncSettings({
-    shareLink: '',
-    writeEndpoint: '',
+    fileId: '',
+    scriptEndpoint: '',
     enabled: false,
     autoSync: false,
     lastSyncAt: null,
@@ -442,4 +435,3 @@ async function handleDeleteAll() {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', init);
-

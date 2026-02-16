@@ -292,9 +292,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.deadlineTagItem {
+}.deadlineTagItem {
   display: flex;
   align-items: center;
   gap: 6px;

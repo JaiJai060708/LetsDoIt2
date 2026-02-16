@@ -152,7 +152,7 @@ async function init() {
 // Check sync settings and initialize sync button
 async function checkSyncSettings() {
   const settings = await getGoogleDriveSyncSettings();
-  syncEnabled = settings.enabled && !!settings.shareLink;
+  syncEnabled = settings.enabled && !!settings.scriptEndpoint && !!settings.fileId;
   autoSyncEnabled = settings.autoSync || false;
   
   // Register the auto-sync callback with the database
@@ -933,7 +933,7 @@ function setupEventListeners() {
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible') {
       const settings = await getGoogleDriveSyncSettings();
-      if (settings.enabled && settings.autoSync && settings.shareLink) {
+      if (settings.enabled && settings.autoSync && settings.scriptEndpoint && settings.fileId) {
         console.log('Popup became visible, auto-syncing...');
         handleSync();
       }

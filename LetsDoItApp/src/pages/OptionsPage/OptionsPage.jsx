@@ -37,13 +37,12 @@ function OptionsPage() {
   const { syncState, triggerSync, refreshSyncSettings } = useSync();
   
   // Google Drive sync state
-  const [googleDriveLink, setGoogleDriveLink] = useState('');
-  const [googleDriveWriteEndpoint, setGoogleDriveWriteEndpoint] = useState('');
+  const [googleDriveFileId, setGoogleDriveFileId] = useState('');
+  const [googleDriveScriptEndpoint, setGoogleDriveScriptEndpoint] = useState('');
   const [googleDriveEnabled, setGoogleDriveEnabled] = useState(false);
   const [googleDriveAutoSync, setGoogleDriveAutoSync] = useState(false);
   const [googleDriveLastSyncAt, setGoogleDriveLastSyncAt] = useState(null);
-  const [isEditingGoogleDriveLink, setIsEditingGoogleDriveLink] = useState(false);
-  const [showAdvancedSync, setShowAdvancedSync] = useState(false);
+  const [isEditingGoogleDrive, setIsEditingGoogleDrive] = useState(false);
   const [showSetupGuide, setShowSetupGuide] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
   
@@ -66,12 +65,11 @@ function OptionsPage() {
   useEffect(() => {
     const loadSettings = async () => {
       const googleDriveSettings = await getGoogleDriveSyncSettings();
-      setGoogleDriveLink(googleDriveSettings.shareLink || '');
-      setGoogleDriveWriteEndpoint(googleDriveSettings.writeEndpoint || '');
+      setGoogleDriveFileId(googleDriveSettings.fileId || '');
+      setGoogleDriveScriptEndpoint(googleDriveSettings.scriptEndpoint || '');
       setGoogleDriveEnabled(googleDriveSettings.enabled || false);
       setGoogleDriveAutoSync(googleDriveSettings.autoSync || false);
       setGoogleDriveLastSyncAt(googleDriveSettings.lastSyncAt || null);
-      setShowAdvancedSync(!!googleDriveSettings.writeEndpoint);
       
       // Load device timezone
       const tz = await getDeviceTimezone();
@@ -244,18 +242,22 @@ function OptionsPage() {
   };
 
   // Google Drive sync handlers
-  const handleSaveGoogleDriveLink = async () => {
+  const handleSaveGoogleDrive = async () => {
     try {
+      // Extract file ID if a full URL was provided
+      const fileId = extractGoogleDriveFileId(googleDriveFileId) || googleDriveFileId;
+      
       await setGoogleDriveSyncSettings({
-        shareLink: googleDriveLink,
-        writeEndpoint: googleDriveWriteEndpoint,
-        enabled: !!googleDriveLink,
+        fileId: fileId,
+        scriptEndpoint: googleDriveScriptEndpoint,
+        enabled: !!(fileId && googleDriveScriptEndpoint),
       });
-      setGoogleDriveEnabled(!!googleDriveLink);
-      setIsEditingGoogleDriveLink(false);
+      setGoogleDriveEnabled(!!(fileId && googleDriveScriptEndpoint));
+      setGoogleDriveFileId(fileId); // Update with extracted ID
+      setIsEditingGoogleDrive(false);
       // Refresh sync context to pick up new settings
       await refreshSyncSettings();
-      showToast(googleDriveLink ? 'Google Drive settings saved!' : 'Google Drive link removed');
+      showToast('Google Drive sync configured successfully!');
     } catch (error) {
       console.error('Failed to save Google Drive settings:', error);
       showToast('Failed to save Google Drive settings', 'error');
@@ -263,8 +265,8 @@ function OptionsPage() {
   };
 
   const handleGoogleDriveSync = async () => {
-    if (!googleDriveLink) {
-      showToast('Please enter a Google Drive share link first', 'error');
+    if (!googleDriveFileId || !googleDriveScriptEndpoint) {
+      showToast('Please configure Google Drive sync first', 'error');
       return;
     }
     
@@ -311,15 +313,14 @@ function OptionsPage() {
   };
 
   const handleDisconnectGoogleDrive = async () => {
-    setGoogleDriveLink('');
-    setGoogleDriveWriteEndpoint('');
+    setGoogleDriveFileId('');
+    setGoogleDriveScriptEndpoint('');
     setGoogleDriveEnabled(false);
     setGoogleDriveAutoSync(false);
     setGoogleDriveLastSyncAt(null);
-    setShowAdvancedSync(false);
     await setGoogleDriveSyncSettings({
-      shareLink: '',
-      writeEndpoint: '',
+      fileId: '',
+      scriptEndpoint: '',
       enabled: false,
       autoSync: false,
       lastSyncAt: null,
@@ -349,11 +350,9 @@ function OptionsPage() {
   const getQRCodeData = () => {
     const data = {
       type: 'letsdoit-sync',
-      shareLink: googleDriveLink,
+      fileId: googleDriveFileId,
+      scriptEndpoint: googleDriveScriptEndpoint,
     };
-    if (googleDriveWriteEndpoint) {
-      data.writeEndpoint = googleDriveWriteEndpoint;
-    }
     return JSON.stringify(data);
   };
 
@@ -361,12 +360,10 @@ function OptionsPage() {
   const handleQRScanSuccess = useCallback(async (decodedText) => {
     try {
       const data = JSON.parse(decodedText);
-      if (data.type === 'letsdoit-sync' && data.shareLink) {
-        setGoogleDriveLink(data.shareLink);
-        if (data.writeEndpoint) {
-          setGoogleDriveWriteEndpoint(data.writeEndpoint);
-          setShowAdvancedSync(true);
-        }
+      if (data.type === 'letsdoit-sync' && (data.fileId || data.scriptEndpoint)) {
+        if (data.fileId) setGoogleDriveFileId(data.fileId);
+        if (data.scriptEndpoint) setGoogleDriveScriptEndpoint(data.scriptEndpoint);
+        
         // Stop scanner and close modal
         if (html5QrCodeRef.current) {
           await html5QrCodeRef.current.stop();
@@ -594,27 +591,22 @@ function OptionsPage() {
                   )}
                 </div>
 
-                {!googleDriveEnabled || isEditingGoogleDriveLink ? (
+                {!googleDriveEnabled || isEditingGoogleDrive ? (
                   <div className={styles.cloudSetup}>
-                    <div className={styles.cloudInstructionCard}>
-                      <div className={styles.cloudInstructionIcon}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 16v-4M12 8h.01" />
-                        </svg>
-                      </div>
-                      <div className={styles.cloudInstructionText}>
-                        <p className={styles.cloudInstructionTitle}>How to connect</p>
-                        <ol className={styles.cloudInstructionSteps}>
-                          <li>Export your data and upload to Google Drive</li>
-                          <li>Right-click → Share → &quot;Anyone with the link&quot;</li>
-                          <li>Paste the share link below</li>
-                        </ol>
-                      </div>
-                    </div>
-                    
+                    {/* Setup Guide Button */}
+                    <button 
+                      className={styles.cloudSetupGuideBtn}
+                      onClick={() => setShowSetupGuide(true)}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+                      </svg>
+                      Need help? Open Setup Guide
+                    </button>
+
                     {/* QR Code Scanner Button - Mobile Only */}
-                    {isMobile && !googleDriveLink && (
+                    {isMobile && !googleDriveFileId && (
                       <button
                         className={styles.cloudScanQRBtn}
                         onClick={startQRScanner}
@@ -627,89 +619,69 @@ function OptionsPage() {
                       </button>
                     )}
                     
-                    <div className={styles.cloudInputWrapper}>
-                      <div className={styles.cloudInputIcon}>
+                    {/* Google Drive File ID */}
+                    <div className={styles.cloudInputGroup}>
+                      <label className={styles.cloudInputLabel}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M7 10l5 5 5-5M12 15V3" />
-                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                          <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                          <polyline points="13 2 13 9 20 9" />
                         </svg>
+                        Google Drive File ID
+                        <span className={styles.requiredBadge}>Required</span>
+                      </label>
+                      <div className={styles.cloudInputWrapper}>
+                        <input
+                          type="text"
+                          placeholder="e.g. 1aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456 or full share link"
+                          value={googleDriveFileId}
+                          onChange={(e) => setGoogleDriveFileId(e.target.value)}
+                          className={styles.cloudInput}
+                        />
                       </div>
-                      <input
-                        type="url"
-                        placeholder="Paste your Google Drive share link (for reading)..."
-                        value={googleDriveLink}
-                        onChange={(e) => setGoogleDriveLink(e.target.value)}
-                        className={styles.cloudInput}
-                      />
+                      <p className={styles.cloudInputHint}>
+                        Your file ID from Google Drive. You can paste the full share link and we'll extract the ID.
+                      </p>
                     </div>
 
-                    {/* Advanced settings for two-way sync */}
-                    <button
-                      className={styles.cloudAdvancedToggle}
-                      onClick={() => setShowAdvancedSync(!showAdvancedSync)}
-                    >
-                      <svg 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2"
-                        className={showAdvancedSync ? styles.rotated : ''}
-                      >
-                        <path d="M9 18l6-6-6-6" />
-                      </svg>
-                      <span>Advanced: Two-way sync (push to cloud)</span>
-                    </button>
-
-                    {showAdvancedSync && (
-                      <div className={styles.cloudAdvancedPanel}>
-                        <div className={styles.cloudAdvancedHeader}>
-                          <p className={styles.cloudAdvancedNote}>
-                            To enable pushing data to Google Drive, you need to set up a Google Apps Script Web App.
-                          </p>
-                          <button 
-                            className={styles.cloudSetupGuideBtn}
-                            onClick={() => setShowSetupGuide(true)}
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10" />
-                              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
-                            </svg>
-                            Setup Guide
-                          </button>
-                        </div>
-                        <div className={styles.cloudInputWrapper}>
-                          <div className={styles.cloudInputIcon}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M17 8l-5-5-5 5M12 3v12" />
-                              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                            </svg>
-                          </div>
-                          <input
-                            type="url"
-                            placeholder="Google Apps Script Web App URL (for writing)..."
-                            value={googleDriveWriteEndpoint}
-                            onChange={(e) => setGoogleDriveWriteEndpoint(e.target.value)}
-                            className={styles.cloudInput}
-                          />
-                        </div>
+                    {/* Google Apps Script Endpoint */}
+                    <div className={styles.cloudInputGroup}>
+                      <label className={styles.cloudInputLabel}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                        </svg>
+                        Google Apps Script Web App URL
+                        <span className={styles.requiredBadge}>Required</span>
+                      </label>
+                      <div className={styles.cloudInputWrapper}>
+                        <input
+                          type="url"
+                          placeholder="https://script.google.com/macros/s/.../exec"
+                          value={googleDriveScriptEndpoint}
+                          onChange={(e) => setGoogleDriveScriptEndpoint(e.target.value)}
+                          className={styles.cloudInput}
+                        />
                       </div>
-                    )}
+                      <p className={styles.cloudInputHint}>
+                        ✓ Reliable • No CORS errors • Handles both reading and writing
+                      </p>
+                    </div>
                     
                     <div className={styles.cloudSetupActions}>
                       <button
                         className={styles.cloudConnectBtn}
-                        onClick={handleSaveGoogleDriveLink}
-                        disabled={!googleDriveLink && !googleDriveEnabled}
+                        onClick={handleSaveGoogleDrive}
+                        disabled={!googleDriveFileId || !googleDriveScriptEndpoint}
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
                         </svg>
                         {googleDriveEnabled ? 'Update Connection' : 'Connect to Drive'}
                       </button>
-                      {isEditingGoogleDriveLink && (
+                      {isEditingGoogleDrive && (
                         <button
                           className={styles.cloudCancelBtn}
-                          onClick={() => setIsEditingGoogleDriveLink(false)}
+                          onClick={() => setIsEditingGoogleDrive(false)}
                         >
                           Cancel
                         </button>
@@ -729,15 +701,15 @@ function OptionsPage() {
                         </svg>
                       </div>
                       <div className={styles.cloudFileInfo}>
-                        <p className={styles.cloudFileName}>backup.json</p>
+                        <p className={styles.cloudFileName}>File ID: {googleDriveFileId.substring(0, 20)}...</p>
                         <p className={styles.cloudFileLink}>
-                          {googleDriveLink.length > 40 ? `${googleDriveLink.substring(0, 40)}...` : googleDriveLink}
+                          {googleDriveScriptEndpoint.length > 50 ? `${googleDriveScriptEndpoint.substring(0, 50)}...` : googleDriveScriptEndpoint}
                         </p>
                       </div>
                       <button 
                         className={styles.cloudEditBtn}
-                        onClick={() => setIsEditingGoogleDriveLink(true)}
-                        title="Edit link"
+                        onClick={() => setIsEditingGoogleDrive(true)}
+                        title="Edit settings"
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -924,9 +896,9 @@ function OptionsPage() {
                   <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
                 </svg>
               </div>
-              <h3 className={styles.setupGuideTitle}>Setup Two-Way Sync</h3>
+              <h3 className={styles.setupGuideTitle}>Setup Google Drive Sync</h3>
               <p className={styles.setupGuideSubtitle}>
-                Follow these steps to enable pushing data to Google Drive
+                Follow these steps to enable reliable, CORS-free sync
               </p>
             </div>
 
@@ -948,29 +920,69 @@ function OptionsPage() {
                     <button 
                       className={styles.copyCodeBtn}
                       onClick={() => {
-                        const fileId = extractGoogleDriveFileId(googleDriveLink) || 'YOUR_FILE_ID_HERE';
+                        const fileId = extractGoogleDriveFileId(googleDriveFileId) || 'YOUR_FILE_ID_HERE';
                         const script = `// Google Apps Script for LetsDoIt Sync
 const FILE_ID = '${fileId}';
 
-function doPost(e) {
+function doGet(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
-    const file = DriveApp.getFileById(FILE_ID);
-    file.setContent(JSON.stringify(data, null, 2));
+    const fileId = e.parameter.fileId || FILE_ID;
+    if (!fileId) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ error: 'No file ID provided' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const file = DriveApp.getFileById(fileId);
+    const content = file.getBlob().getDataAsString();
+    const data = JSON.parse(content);
+    data.fetchedAt = new Date().toISOString();
+    data.fetchMethod = 'GoogleAppsScript';
+    
     return ContentService
-      .createTextOutput(JSON.stringify({ success: true }))
+      .createTextOutput(JSON.stringify(data))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: error.message }))
+      .createTextOutput(JSON.stringify({ 
+        error: error.toString(),
+        message: 'Failed to read file' 
+      }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok' }))
-    .setMimeType(ContentService.MimeType.JSON);
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const fileId = e.parameter.fileId || FILE_ID;
+    if (!fileId) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ error: 'No file ID provided' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const file = DriveApp.getFileById(fileId);
+    file.setContent(JSON.stringify(data, null, 2));
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: true,
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        error: error.toString(),
+        message: 'Failed to write file' 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doOptions(e) {
+  return ContentService.createTextOutput('');
 }`;
                         navigator.clipboard.writeText(script);
                         setCopiedScript(true);
@@ -995,20 +1007,23 @@ function doGet(e) {
                       )}
                     </button>
                     <pre className={styles.codeContent}>
-{`const FILE_ID = '${extractGoogleDriveFileId(googleDriveLink) || 'YOUR_FILE_ID'}';
+{`const FILE_ID = '${extractGoogleDriveFileId(googleDriveFileId) || 'YOUR_FILE_ID'}';
+
+function doGet(e) {
+  const fileId = e.parameter.fileId || FILE_ID;
+  const file = DriveApp.getFileById(fileId);
+  const content = file.getBlob().getDataAsString();
+  return ContentService.createTextOutput(content)
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
 function doPost(e) {
   const data = JSON.parse(e.postData.contents);
-  const file = DriveApp.getFileById(FILE_ID);
+  const fileId = e.parameter.fileId || FILE_ID;
+  const file = DriveApp.getFileById(fileId);
   file.setContent(JSON.stringify(data, null, 2));
   return ContentService.createTextOutput(
     JSON.stringify({ success: true })
-  ).setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet(e) {
-  return ContentService.createTextOutput(
-    JSON.stringify({ status: 'ok' })
   ).setMimeType(ContentService.MimeType.JSON);
 }`}
                     </pre>
@@ -1024,9 +1039,13 @@ function doGet(e) {
                     <li>Click <strong>Deploy</strong> → <strong>New deployment</strong></li>
                     <li>Select type: <strong>Web app</strong></li>
                     <li>Execute as: <strong>Me</strong></li>
-                    <li>Who has access: <strong>Anyone</strong></li>
+                    <li><strong style={{color: 'var(--error-color)'}}>⚠️ CRITICAL:</strong> Who has access: <strong>&quot;Anyone&quot;</strong> (NOT &quot;Anyone with Google account&quot;)</li>
                     <li>Click <strong>Deploy</strong> and authorize</li>
                   </ol>
+                  <div className={styles.setupNote}>
+                    <strong>Important:</strong> You must select <strong>&quot;Anyone&quot;</strong> (no authentication) to avoid CORS errors. 
+                    If you select &quot;Anyone with Google account&quot;, sync will fail with CORS policy errors.
+                  </div>
                 </div>
               </div>
 
@@ -1036,7 +1055,7 @@ function doGet(e) {
                   <h4>Copy the Web App URL</h4>
                   <p>Copy the URL that looks like:<br/>
                   <code>https://script.google.com/macros/s/.../exec</code></p>
-                  <p>Paste it in the &quot;Write Endpoint&quot; field above.</p>
+                  <p>Paste it in the &quot;Google Apps Script Web App URL&quot; field in Settings.</p>
                 </div>
               </div>
             </div>
@@ -1084,20 +1103,18 @@ function doGet(e) {
               <div className={styles.qrModalInfo}>
                 <div className={styles.qrInfoItem}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M7 10l5 5 5-5M12 15V3" />
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                    <polyline points="13 2 13 9 20 9" />
                   </svg>
-                  <span>Read: {googleDriveLink ? 'Configured' : 'Not set'}</span>
+                  <span>File ID: {googleDriveFileId ? 'Configured' : 'Not set'}</span>
                 </div>
-                {googleDriveWriteEndpoint && (
-                  <div className={styles.qrInfoItem}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17 8l-5-5-5 5M12 3v12" />
-                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-                    </svg>
-                    <span>Write: Configured</span>
-                  </div>
-                )}
+                <div className={styles.qrInfoItem}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                  </svg>
+                  <span>Script Endpoint: {googleDriveScriptEndpoint ? 'Configured' : 'Not set'}</span>
+                </div>
               </div>
             </div>
           </div>
