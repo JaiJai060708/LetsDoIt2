@@ -203,6 +203,21 @@
   text-decoration: underline;
 }
 
+
+.fieldLabel {
+  display: block;
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fieldLabel:first-of-type {
+  margin-top: 0;
+}
+
 .noteInput {
   width: 100%;
   padding: 14px;

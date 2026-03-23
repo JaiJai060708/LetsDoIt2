@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { format, getDate } from 'date-fns';
 import {
   scoreToColor,
