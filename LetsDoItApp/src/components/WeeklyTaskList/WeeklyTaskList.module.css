@@ -61,6 +61,77 @@
   transform: translateY(-1px);
 }
 
+
+.reflectionBadge {
+  margin-left: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reflectionCard {
+  margin: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reflectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.reflectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reflectionMood {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.reflectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reflectionLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reflectionText {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.reflectionDate {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
 .monthTitle {
   font-size: 20px;
   font-weight: 600;

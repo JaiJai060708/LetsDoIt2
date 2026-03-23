@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { addDays, isSameDay } from 'date-fns';
+import { addDays, format, isSameDay } from 'date-fns';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
-import { getAllTasks, updateTask, getAvailableTags, completeTag, updateTag } from '../../db/database';
+import { getAllTasks, updateTask, getAvailableTags, completeTag, updateTag, getAllHabits } from '../../db/database';
 import {
   getWeekStart,
   getWeekDayDate,
@@ -22,7 +22,7 @@ import styles from './WeeklyTaskList.module.css';
 
 const DAY_IDS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
+function WeeklyTaskList({ onSelectTask, selectedTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [weekTasks, setWeekTasks] = useState(Array(7).fill([]));
   const [isLoading, setIsLoading] = useState(true);
@@ -30,6 +30,7 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     Array(7).fill(null).map(() => ({ active: [], completed: [] }))
   );
   const [isMobile, setIsMobile] = useState(false);
+  const [weekHabits, setWeekHabits] = useState({});
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(null);
 
@@ -84,6 +85,25 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     loadTagDeadlines();
   };
 
+  const loadWeekHabits = useCallback(async () => {
+    try {
+      const allHabits = await getAllHabits();
+      const habitsForWeek = {};
+
+      for (let i = 0; i < 7; i++) {
+        const dayKey = extractDateString(getWeekDayDate(currentDate, i));
+        const entry = allHabits.find((habit) => habit.date === dayKey);
+        if (entry) {
+          habitsForWeek[dayKey] = entry;
+        }
+      }
+
+      setWeekHabits(habitsForWeek);
+    } catch (error) {
+      console.error('Failed to load week habits:', error);
+    }
+  }, [currentDate]);
+
   const loadTasks = useCallback(async () => {
     try {
       const allTasks = await getAllTasks();
@@ -99,15 +119,17 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   useEffect(() => {
     loadTasks();
     loadTagDeadlines();
+    loadWeekHabits();
 
     const handleFocus = () => {
       loadTasks();
       loadTagDeadlines();
+      loadWeekHabits();
     };
     window.addEventListener('focus', handleFocus);
 
     return () => window.removeEventListener('focus', handleFocus);
-  }, [loadTasks, loadTagDeadlines]);
+  }, [loadTasks, loadTagDeadlines, loadWeekHabits]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)');
@@ -180,6 +202,8 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const handleTaskCreated = () => {
     loadTasks();
   };
+
+  const weekReflectionCount = useMemo(() => Object.keys(weekHabits).length, [weekHabits]);
 
   // Get the date for a day droppable ID
   const getDateForDayId = (dayId) => {
@@ -321,6 +345,7 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
             ›
           </button>
           <h2 className={styles.monthTitle}>{getWeekLabel(weekStart)}</h2>
+          <span className={styles.reflectionBadge}>Mood notes: {weekReflectionCount}</span>
         </div>
       </div>
 
@@ -339,6 +364,10 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
                 const dayIsToday = isToday(dayDate);
                 const dayDeadlines = tagDeadlinesByDay[index] || { active: [], completed: [] };
                 const hasAnyTags = dayDeadlines.active.length > 0 || dayDeadlines.completed.length > 0;
+                const dayKey = extractDateString(dayDate);
+                const dayHabit = weekHabits[dayKey];
+                const gratitude = dayHabit?.gratitude || dayHabit?.note;
+                const bedtimeThoughts = dayHabit?.bedtimeThoughts;
 
                 return (
                   <div
@@ -419,6 +448,29 @@ function WeeklyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
                         </div>
                       )}
                     </Droppable>
+                    {(gratitude || bedtimeThoughts) && (
+                      <div className={styles.reflectionCard}>
+                        <div className={styles.reflectionHeader}>
+                          <span className={styles.reflectionTitle}>Bedtime reflections</span>
+                          {dayHabit?.score ? (
+                            <span className={styles.reflectionMood}>{dayHabit.score}/10</span>
+                          ) : null}
+                        </div>
+                        {gratitude && (
+                          <div className={styles.reflectionBlock}>
+                            <span className={styles.reflectionLabel}>Grateful for</span>
+                            <p className={styles.reflectionText}>{gratitude}</p>
+                          </div>
+                        )}
+                        {bedtimeThoughts && (
+                          <div className={styles.reflectionBlock}>
+                            <span className={styles.reflectionLabel}>Thoughts before bed</span>
+                            <p className={styles.reflectionText}>{bedtimeThoughts}</p>
+                          </div>
+                        )}
+                        <span className={styles.reflectionDate}>{format(dayDate, 'MMM d')}</span>
+                      </div>
+                    )}
                     <div className={styles.dayContent}>
                       <TaskList
                         droppableId={DAY_IDS[index]}

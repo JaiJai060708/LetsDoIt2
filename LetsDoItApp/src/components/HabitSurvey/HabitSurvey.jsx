@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { scoreToColor, scoreToLabel, parseDateKey } from '../../utils/habitUtils';
 import styles from './HabitSurvey.module.css';
@@ -37,19 +37,14 @@ function ScoreBox({ score, label, isSelected, onSelect }) {
 
 function HabitSurvey({ dateKey, existingHabit, onSubmit, onClose }) {
   const [score, setScore] = useState(existingHabit?.score || null);
-  const [note, setNote] = useState(existingHabit?.note || '');
+  const [gratitude, setGratitude] = useState(existingHabit?.gratitude || existingHabit?.note || '');
+  const [bedtimeThoughts, setBedtimeThoughts] = useState(existingHabit?.bedtimeThoughts || '');
   const [step, setStep] = useState(1); // 1 = score, 2 = note
 
   const date = parseDateKey(dateKey);
   const formattedDate = format(date, 'EEEE, MMMM d, yyyy');
   const isEditing = !!existingHabit;
 
-  useEffect(() => {
-    if (existingHabit) {
-      setScore(existingHabit.score);
-      setNote(existingHabit.note || '');
-    }
-  }, [existingHabit]);
 
   const handleScoreSelect = (value) => {
     setScore(value);
@@ -62,7 +57,9 @@ function HabitSurvey({ dateKey, existingHabit, onSubmit, onClose }) {
     onSubmit({
       date: dateKey,
       score,
-      note: note.trim(),
+      note: gratitude.trim(),
+      gratitude: gratitude.trim(),
+      bedtimeThoughts: bedtimeThoughts.trim(),
     });
   };
 
@@ -129,13 +126,30 @@ function HabitSurvey({ dateKey, existingHabit, onSubmit, onClose }) {
             </div>
 
             <h2 className={styles.question}>Tell us more</h2>
+            <label className={styles.fieldLabel} htmlFor="gratitude-input">
+              Grateful for
+            </label>
             <textarea
+              id="gratitude-input"
               className={styles.noteInput}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+              value={gratitude}
+              onChange={(e) => setGratitude(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="What made you feel this way? (optional)"
+              placeholder="What are you grateful for today? (optional)"
               autoFocus
+              rows={3}
+            />
+
+            <label className={styles.fieldLabel} htmlFor="bedtime-thoughts-input">
+              Thoughts before bed
+            </label>
+            <textarea
+              id="bedtime-thoughts-input"
+              className={styles.noteInput}
+              value={bedtimeThoughts}
+              onChange={(e) => setBedtimeThoughts(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Dump the thoughts you want to leave here before sleeping. (optional)"
               rows={4}
             />
 

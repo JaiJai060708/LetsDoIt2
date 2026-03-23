@@ -7,7 +7,6 @@ import {
   scoreToColor,
   scoreToLabel,
   getTodayKey,
-  formatDateKey,
   calculateStreak,
 } from '../../utils/habitUtils';
 import styles from './HabitTracker.module.css';
@@ -28,6 +27,7 @@ function StatCard({ label, value, icon, color }) {
 
 function RecentEntry({ habit }) {
   const date = new Date(habit.date);
+  const hasReflection = Boolean(habit.gratitude || habit.note || habit.bedtimeThoughts);
   return (
     <div className={styles.recentEntry}>
       <div
@@ -40,7 +40,7 @@ function RecentEntry({ habit }) {
           {scoreToLabel(habit.score)}
         </span>
       </div>
-      {habit.note && <span className={styles.recentNote}>📝</span>}
+      {hasReflection && <span className={styles.recentNote}>📝</span>}
     </div>
   );
 }
@@ -226,9 +226,20 @@ function HabitTracker({ headerAction }) {
                     <div className={styles.hoverLabel}>
                       {scoreToLabel(hoveredDay.habit.score)}
                     </div>
-                    {hoveredDay.habit.note && (
-                      <div className={styles.hoverNote}>
-                        "{hoveredDay.habit.note}"
+                    {(hoveredDay.habit.gratitude || hoveredDay.habit.note) && (
+                      <div className={styles.hoverDetail}>
+                        <span className={styles.hoverDetailLabel}>Grateful for</span>
+                        <div className={styles.hoverNote}>
+                          {hoveredDay.habit.gratitude || hoveredDay.habit.note}
+                        </div>
+                      </div>
+                    )}
+                    {hoveredDay.habit.bedtimeThoughts && (
+                      <div className={styles.hoverDetail}>
+                        <span className={styles.hoverDetailLabel}>Thoughts before bed</span>
+                        <div className={styles.hoverNote}>
+                          {hoveredDay.habit.bedtimeThoughts}
+                        </div>
                       </div>
                     )}
                   </div>
