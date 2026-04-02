@@ -1,0 +1,129 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  position: relative;
+  background: var(--modal-bg);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  max-width: 500px;
+  width: 95%;
+  box-shadow: var(--modal-shadow);
+  animation: slideUp 0.3s ease;
+  border: 1px solid var(--border-light);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+
+.textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--accent-color, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.cancelButton {
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cancelButton:hover {
+  background: var(--bg-secondary);
+}
+
+.submitButton {
+  padding: 8px 18px;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

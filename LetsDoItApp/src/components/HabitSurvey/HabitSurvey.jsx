@@ -38,7 +38,6 @@ function ScoreBox({ score, label, isSelected, onSelect }) {
 function HabitSurvey({ dateKey, existingHabit, onSubmit, onClose }) {
   const [score, setScore] = useState(existingHabit?.score || null);
   const [gratitude, setGratitude] = useState(existingHabit?.gratitude || existingHabit?.note || '');
-  const [bedtimeThoughts, setBedtimeThoughts] = useState(existingHabit?.bedtimeThoughts || '');
   const [step, setStep] = useState(1); // 1 = score, 2 = note
 
   const date = parseDateKey(dateKey);
@@ -59,7 +58,6 @@ function HabitSurvey({ dateKey, existingHabit, onSubmit, onClose }) {
       score,
       note: gratitude.trim(),
       gratitude: gratitude.trim(),
-      bedtimeThoughts: bedtimeThoughts.trim(),
     });
   };
 
@@ -138,19 +136,6 @@ function HabitSurvey({ dateKey, existingHabit, onSubmit, onClose }) {
               placeholder="What are you grateful for today? (optional)"
               autoFocus
               rows={3}
-            />
-
-            <label className={styles.fieldLabel} htmlFor="bedtime-thoughts-input">
-              Thoughts before bed
-            </label>
-            <textarea
-              id="bedtime-thoughts-input"
-              className={styles.noteInput}
-              value={bedtimeThoughts}
-              onChange={(e) => setBedtimeThoughts(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Dump the thoughts you want to leave here before sleeping. (optional)"
-              rows={4}
             />
 
             <div className={styles.actions}>

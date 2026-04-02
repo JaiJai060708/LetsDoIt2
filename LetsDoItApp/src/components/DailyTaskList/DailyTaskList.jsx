@@ -6,6 +6,8 @@ import { getTodayKey } from '../../utils/habitUtils';
 import TaskList from '../TaskList';
 import AddTask from '../AddTask';
 import HappinessTask from '../HappinessTask';
+import BedtimeTask from '../BedtimeTask';
+import BedtimeDump from '../BedtimeDump';
 import styles from './DailyTaskList.module.css';
 
 // Section configuration
@@ -29,6 +31,8 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   const [expandStates, setExpandStates] = useState({});
   const [expandStatesLoaded, setExpandStatesLoaded] = useState(false);
   const [showHappinessTask, setShowHappinessTask] = useState(false);
+  const [showBedtimeTask, setShowBedtimeTask] = useState(false);
+  const [showBedtimeDump, setShowBedtimeDump] = useState(false);
   const [tagDeadlines, setTagDeadlines] = useState({ today: [], tomorrow: [], overdue: [] });
   const [isMobile, setIsMobile] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -55,6 +59,23 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     } catch (error) {
       console.error('Failed to check happiness survey:', error);
       setShowHappinessTask(true); // Show task if check fails
+    }
+  }, []);
+
+  // Check if bedtime task should be shown (after 7:30 PM and no dump yet today)
+  const checkBedtimeTask = useCallback(async () => {
+    try {
+      const now = new Date();
+      const isAfter730PM = now.getHours() > 19 || (now.getHours() === 19 && now.getMinutes() >= 30);
+      if (!isAfter730PM) {
+        setShowBedtimeTask(false);
+        return;
+      }
+      const todayKey = getTodayKey();
+      const todayHabit = await getHabitByDate(todayKey);
+      setShowBedtimeTask(!todayHabit?.bedtimeThoughts);
+    } catch (error) {
+      console.error('Failed to check bedtime task:', error);
     }
   }, []);
 
@@ -121,18 +142,20 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     loadTasks();
     loadExpandStates();
     checkHappinessSurvey();
+    checkBedtimeTask();
     loadTagDeadlines();
     
     // Reload when window regains focus
     const handleFocus = () => {
       loadTasks();
       checkHappinessSurvey();
+      checkBedtimeTask();
       loadTagDeadlines();
     };
     window.addEventListener('focus', handleFocus);
     
     return () => window.removeEventListener('focus', handleFocus);
-  }, [loadTasks, loadExpandStates, checkHappinessSurvey, loadTagDeadlines]);
+  }, [loadTasks, loadExpandStates, checkHappinessSurvey, checkBedtimeTask, loadTagDeadlines]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)');
@@ -332,7 +355,8 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     tasks.tomorrowTasks.length === 0 &&
     tasks.upcoming.length === 0 &&
     tasks.someday.length === 0 &&
-    !showHappinessTask;
+    !showHappinessTask &&
+    !showBedtimeTask;
 
   if (isLoading || !expandStatesLoaded) {
     return (
@@ -363,7 +387,8 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     }
 
     // Badge count includes happiness task if shown in today section
-    const displayCount = isTodaySection && showHappinessTask ? taskCount + 1 : taskCount;
+    const extraCount = isTodaySection ? (showHappinessTask ? 1 : 0) + (showBedtimeTask ? 1 : 0) : 0;
+    const displayCount = taskCount + extraCount;
 
     return (
       <section key={section.id} className={styles.section}>
@@ -384,13 +409,16 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
         </button>
         <div className={`${styles.sectionContent} ${isExpanded ? styles.expanded : ''}`}>
           {isTodaySection && showHappinessTask && <HappinessTask />}
+          {isTodaySection && showBedtimeTask && (
+            <BedtimeTask onClick={() => setShowBedtimeDump(true)} />
+          )}
           <TaskList
             droppableId={section.id}
             tasks={sectionTasks}
             onUpdate={loadTasks}
             onSelectTask={onSelectTask}
             selectedTask={selectedTask}
-            emptyMessage={taskCount === 0 && !(isTodaySection && showHappinessTask) ? `No ${section.title.toLowerCase()} tasks` : ''}
+            emptyMessage={taskCount === 0 && !(isTodaySection && (showHappinessTask || showBedtimeTask)) ? `No ${section.title.toLowerCase()} tasks` : ''}
           />
         </div>
       </section>
@@ -398,6 +426,7 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
   };
 
   return (
+    <>
     <div className={`${styles.container} ${isMobile && isKeyboardOpen ? styles.keyboardOpen : ''}`}>
       {!hideHeader && (
         <div className={styles.header}>
@@ -501,6 +530,17 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
         />
       </div>
     </div>
+
+    {showBedtimeDump && (
+      <BedtimeDump
+        onClose={() => setShowBedtimeDump(false)}
+        onSaved={() => {
+          setShowBedtimeTask(false);
+          setShowBedtimeDump(false);
+        }}
+      />
+    )}
+  </>
   );
 }
 
