@@ -38,7 +38,7 @@ export function SyncProvider({ children }) {
   // Check sync settings and update state
   const refreshSyncSettings = useCallback(async () => {
     const settings = await getGoogleDriveSyncSettings();
-    const enabled = settings.enabled && !!settings.shareLink;
+    const enabled = settings.enabled && !!settings.scriptEndpoint;
     setIsEnabled(enabled);
     setAutoSyncEnabled(settings.autoSync || false);
     if (!enabled) {
@@ -63,7 +63,7 @@ export function SyncProvider({ children }) {
     // If not enabled by state, double-check the database settings (handles race condition on initial load)
     if (!shouldSync && !forceSync) {
       const settings = await getGoogleDriveSyncSettings();
-      shouldSync = settings.enabled && !!settings.shareLink;
+      shouldSync = settings.enabled && !!settings.scriptEndpoint;
     }
     
     if (isSyncingRef.current) {
@@ -173,7 +173,7 @@ export function SyncProvider({ children }) {
   useEffect(() => {
     const performInitialSync = async () => {
       const settings = await getGoogleDriveSyncSettings();
-      if (settings.enabled && settings.autoSync && settings.shareLink) {
+      if (settings.enabled && settings.autoSync && settings.scriptEndpoint) {
         console.log('Auto-syncing on app load/refresh...');
         // Use forceSync=true to bypass state check (state might not be set yet)
         performSync(true);
@@ -189,7 +189,7 @@ export function SyncProvider({ children }) {
       if (document.visibilityState === 'visible') {
         // Check if auto-sync is enabled
         const settings = await getGoogleDriveSyncSettings();
-        if (settings.enabled && settings.autoSync && settings.shareLink) {
+        if (settings.enabled && settings.autoSync && settings.scriptEndpoint) {
           console.log('Tab became active, auto-syncing...');
           // Use forceSync=true to bypass state check
           performSync(true);
