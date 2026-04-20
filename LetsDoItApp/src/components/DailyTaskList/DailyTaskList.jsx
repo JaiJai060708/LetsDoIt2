@@ -217,11 +217,22 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
     loadTasks();
   };
 
-  // Check if section is expanded
-  // Default: expanded if has tasks, collapsed if empty
+  // Check if section is expanded.
+  // Auto-behavior: expanded when count > 0, collapsed when 0.
+  // User can override, but the override resets when the count changes.
   const isSectionExpanded = (sectionId, taskCount) => {
-    if (expandStates[sectionId] !== undefined) {
-      return expandStates[sectionId];
+    const stored = expandStates[sectionId];
+    if (stored !== undefined && stored !== null) {
+      if (typeof stored === 'object') {
+        // New format: { expanded, count }
+        // If task count has changed since user set the override, reset to default
+        if (stored.count !== taskCount) {
+          return taskCount > 0;
+        }
+        return stored.expanded;
+      }
+      // Legacy boolean format — treat as-is
+      return stored;
     }
     // Default: expanded if has tasks
     return taskCount > 0;
@@ -229,15 +240,20 @@ function DailyTaskList({ onSelectTask, selectedTask, hideHeader = false }) {
 
   // Toggle section expand state
   const handleToggleSection = async (sectionId) => {
-    const currentState = isSectionExpanded(sectionId, tasks[SECTIONS.find(s => s.id === sectionId)?.tasksKey]?.length || 0);
+    const section = SECTIONS.find(s => s.id === sectionId);
+    const taskCount = tasks[section?.tasksKey]?.length || 0;
+    const currentState = isSectionExpanded(sectionId, taskCount);
     const newState = !currentState;
-    
+
+    // Store expanded state alongside the current count so we can detect count changes
+    const newStored = { expanded: newState, count: taskCount };
+
     // Optimistic update
-    setExpandStates(prev => ({ ...prev, [sectionId]: newState }));
-    
+    setExpandStates(prev => ({ ...prev, [sectionId]: newStored }));
+
     // Persist to DB
     try {
-      await setSectionExpandState(sectionId, newState);
+      await setSectionExpandState(sectionId, newStored);
     } catch (error) {
       console.error('Failed to save expand state:', error);
     }
