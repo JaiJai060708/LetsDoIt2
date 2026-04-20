@@ -518,10 +518,22 @@ function getTagById(tagId) {
   return availableTags.find(t => t.id === tagId);
 }
 
-// Check if section is expanded
+// Check if section is expanded.
+// Auto-behavior: expanded when count > 0, collapsed when 0.
+// User can override, but the override resets when the count changes.
 function isSectionExpanded(sectionId, taskCount) {
-  if (expandStates[sectionId] !== undefined) {
-    return expandStates[sectionId];
+  const stored = expandStates[sectionId];
+  if (stored !== undefined && stored !== null) {
+    if (typeof stored === 'object') {
+      // New format: { expanded, count }
+      // If task count has changed since user set the override, reset to default
+      if (stored.count !== taskCount) {
+        return taskCount > 0;
+      }
+      return stored.expanded;
+    }
+    // Legacy boolean format — treat as-is
+    return stored;
   }
   return taskCount > 0;
 }
@@ -786,10 +798,12 @@ async function handleToggleSection(sectionId) {
   const taskCount = tasks[section.tasksKey]?.length || 0;
   const currentState = isSectionExpanded(sectionId, taskCount);
   const newState = !currentState;
-  
-  expandStates[sectionId] = newState;
-  await setSectionExpandState(sectionId, newState);
-  
+
+  // Store expanded state alongside the current count so we can detect count changes
+  const newStored = { expanded: newState, count: taskCount };
+  expandStates[sectionId] = newStored;
+  await setSectionExpandState(sectionId, newStored);
+
   renderSections();
 }
 
