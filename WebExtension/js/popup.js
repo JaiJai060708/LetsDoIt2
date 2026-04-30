@@ -866,12 +866,7 @@ async function handleAddTask() {
   pendingTaskNote = null;
   updateCaptureButtonState();
   closeTagDropdown();
-  
-  // Reset to default "personal" tag
-  const personalTag = availableTags.find(tag => tag.name.toLowerCase() === 'personal');
-  selectedTags = personalTag && !personalTag.completedAt ? [personalTag.id] : [];
-  updateTagButton();
-  
+
   await loadTasks();
   renderSections();
 }

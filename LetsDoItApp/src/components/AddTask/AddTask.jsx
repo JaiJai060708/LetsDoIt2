@@ -202,7 +202,6 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
       });
       
       setContent('');
-      setSelectedTags([]);
       onTaskCreated?.(newTask);
     } catch (error) {
       console.error('Failed to create task:', error);
