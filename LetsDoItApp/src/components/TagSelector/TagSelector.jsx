@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getAvailableTags, addTag, updateTag, deleteTag } from '../../db/database';
+import { getAvailableTags, addTag, updateTag, deleteTag, completeTag } from '../../db/database';
 import styles from './TagSelector.module.css';
 
 // Predefined color palette for tags
@@ -30,7 +30,8 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
   const [editColor, setEditColor] = useState('');
   const [editDeadline, setEditDeadline] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
-  
+  const [showCompleted, setShowCompleted] = useState(false);
+
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
   const editInputRef = useRef(null);
@@ -73,6 +74,16 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
     setIsCreating(false);
     setEditingTag(null);
     setDeleteConfirmId(null);
+    setShowCompleted(false);
+  };
+
+  // Split tags into active and completed (only tags with deadlines can be completed)
+  const activeTags = availableTags.filter((tag) => !tag.completedAt);
+  const completedTags = availableTags.filter((tag) => tag.completedAt && tag.deadline);
+
+  const handleUncompleteTag = async (tagId) => {
+    await completeTag(tagId, false);
+    await loadTags();
   };
 
   const handleTagToggle = (tagId) => {
@@ -194,10 +205,10 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
           </div>
           
           <div className={styles.tagList}>
-            {availableTags.length === 0 && !isCreating ? (
+            {activeTags.length === 0 && !isCreating ? (
               <p className={styles.noTags}>No tags yet. Create your first tag below!</p>
             ) : (
-              availableTags.map((tag) => (
+              activeTags.map((tag) => (
                 <div key={tag.id} className={styles.tagRow}>
                   {deleteConfirmId === tag.id ? (
                     <div className={styles.deleteConfirm}>
@@ -324,6 +335,44 @@ function TagSelector({ selectedTags = [], onChange, compact = false }) {
               ))
             )}
           </div>
+
+          {completedTags.length > 0 && (
+            <>
+              <button
+                type="button"
+                className={styles.completedToggle}
+                onClick={() => setShowCompleted(!showCompleted)}
+              >
+                <span className={`${styles.completedChevron} ${showCompleted ? styles.expanded : ''}`}>›</span>
+                <span className={styles.completedLabel}>Completed ({completedTags.length})</span>
+              </button>
+              {showCompleted && (
+                <div className={styles.completedList}>
+                  {completedTags.map((tag) => (
+                    <div key={tag.id} className={styles.completedTagRow}>
+                      <span
+                        className={styles.completedTagPreview}
+                        style={{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color }}
+                      >
+                        {tag.name}
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.restoreBtn}
+                        onClick={() => handleUncompleteTag(tag.id)}
+                        title="Restore tag"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                          <path d="M3 3v5h5" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
           <div className={styles.divider} />
 
