@@ -31,12 +31,24 @@ const renderTextWithLinks = (text) => {
   });
 };
 
+// Build an ISO string representing local noon on the given YYYY-MM-DD date.
+// Stored as ISO so existing categorization (extractDateString) keeps working.
+const dateStringToDoneAtISO = (dateStr) => {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0).toISOString();
+};
+
 function TaskModal({ task, onClose, onUpdate }) {
   const [content, setContent] = useState(task.content);
   const [note, setNote] = useState(task.note || '');
   const [dueDate, setDueDate] = useState(formatDateForInput(task.dueDate));
   const [isSomeday, setIsSomeday] = useState(!task.dueDate);
   const [tags, setTags] = useState(task.tags || []);
+  const [doneAt, setDoneAt] = useState(task.doneAt || null);
+  const [doneAtDate, setDoneAtDate] = useState(
+    task.doneAt ? extractDateString(task.doneAt) : ''
+  );
   const [saveTimeout, setSaveTimeout] = useState(null);
   const [isEditingNote, setIsEditingNote] = useState(false);
   const textareaRef = useRef(null);
@@ -60,23 +72,42 @@ function TaskModal({ task, onClose, onUpdate }) {
   // Debounced auto-save
   useEffect(() => {
     if (saveTimeout) clearTimeout(saveTimeout);
-    
+
     const timeout = setTimeout(() => {
       saveChanges();
     }, 800);
-    
+
     setSaveTimeout(timeout);
-    
+
     return () => {
       if (saveTimeout) clearTimeout(saveTimeout);
     };
   }, [content, note, dueDate, isSomeday, tags]);
 
   const handleToggleDone = async () => {
-    // Store doneAt as ISO string (includes timezone info for reference)
-    const doneAt = task.doneAt ? null : new Date().toISOString();
-    await updateTask(task.id, { doneAt });
-    onUpdate();
+    const nextDoneAt = doneAt ? null : new Date().toISOString();
+    setDoneAt(nextDoneAt);
+    setDoneAtDate(nextDoneAt ? extractDateString(nextDoneAt) : '');
+    try {
+      await updateTask(task.id, { doneAt: nextDoneAt });
+      onUpdate();
+    } catch (error) {
+      console.error('Failed to update completion status:', error);
+    }
+  };
+
+  const handleDoneAtDateChange = async (e) => {
+    const newDateStr = e.target.value;
+    if (!newDateStr) return;
+    setDoneAtDate(newDateStr);
+    const nextDoneAt = dateStringToDoneAtISO(newDateStr);
+    setDoneAt(nextDoneAt);
+    try {
+      await updateTask(task.id, { doneAt: nextDoneAt });
+      onUpdate();
+    } catch (error) {
+      console.error('Failed to update completion date:', error);
+    }
   };
 
   const handleDelete = async () => {
@@ -108,16 +139,6 @@ function TaskModal({ task, onClose, onUpdate }) {
     setIsEditingNote(false);
   };
 
-  // Format doneAt for display
-  const formatDoneAt = (doneAtStr) => {
-    if (!doneAtStr) return '';
-    // Extract date string for display
-    const dateStr = extractDateString(doneAtStr);
-    if (!dateStr) return 'Unknown';
-    // Parse and format nicely
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day).toLocaleDateString();
-  };
 
   return (
     <div className={styles.overlay} onClick={handleOverlayClick}>
@@ -150,15 +171,21 @@ function TaskModal({ task, onClose, onUpdate }) {
               <label className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
-                  checked={!!task.doneAt}
+                  checked={!!doneAt}
                   onChange={handleToggleDone}
                 />
                 <span>Completed</span>
               </label>
-              {task.doneAt && (
-                <span className={styles.doneDate}>
-                  Done on {formatDoneAt(task.doneAt)}
-                </span>
+              {doneAt && (
+                <div className={styles.doneDateRow}>
+                  <span className={styles.doneDate}>Done on</span>
+                  <input
+                    type="date"
+                    className={styles.dateInput}
+                    value={doneAtDate}
+                    onChange={handleDoneAtDateChange}
+                  />
+                </div>
               )}
             </div>
           </div>
