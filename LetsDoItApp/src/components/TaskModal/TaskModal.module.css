@@ -193,7 +193,14 @@
 .doneDate {
   font-size: 13px;
   color: var(--text-muted);
+}
+
+.doneDateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: 28px;
+  flex-wrap: wrap;
 }
 
 .dateInput {
