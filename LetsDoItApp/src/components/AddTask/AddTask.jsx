@@ -23,6 +23,11 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
   const [availableTags, setAvailableTags] = useState([]);
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Mobile gets a dedicated full-screen "New Task" view instead of the
+  // inline bottom bar (which causes iOS to zoom into the small input).
+  const [isMobile, setIsMobile] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Tag management states
   const [isCreating, setIsCreating] = useState(false);
@@ -43,12 +48,43 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
 
   useEffect(() => {
     // Don't auto-focus on mobile to prevent keyboard from opening unexpectedly
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (!compact && !isMobile) {
+    const mobile = window.matchMedia('(max-width: 768px)').matches;
+    if (!compact && !mobile) {
       inputRef.current?.focus();
     }
     loadTags(true); // true = initial load, sets default tag
   }, [compact]);
+
+  // Track whether we're on a mobile-sized viewport
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // When the full-screen mobile view opens: focus the input, lock background
+  // scroll, and allow closing via the Escape key.
+  useEffect(() => {
+    if (!(isMobile && isExpanded)) return;
+
+    inputRef.current?.focus();
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') closeOverlay();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, isExpanded]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -92,6 +128,13 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
     setEditingTag(null);
     setDeleteConfirmId(null);
     setShowCompleted(false);
+  };
+
+  const openOverlay = () => setIsExpanded(true);
+
+  const closeOverlay = () => {
+    setIsExpanded(false);
+    closeTagPicker();
   };
 
   // Filter tags into active and completed (only tags with deadlines can be completed)
@@ -203,6 +246,11 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
       
       setContent('');
       onTaskCreated?.(newTask);
+
+      // On mobile, return to the previous view after the task is added
+      if (isMobile) {
+        closeOverlay();
+      }
     } catch (error) {
       console.error('Failed to create task:', error);
     } finally {
@@ -210,24 +258,41 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
     }
   };
 
-  return (
-    <form 
-      className={`${styles.addTask} ${compact ? styles.compact : ''}`} 
-      onSubmit={handleSubmit}
-    >
-      <div className={styles.inputWrapper}>
-        <input
-          ref={inputRef}
-          type="text"
-          className={styles.input}
-          placeholder="Add a new task..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          disabled={isSubmitting}
-        />
-      </div>
-      
-      <div className={styles.tagPickerWrapper} ref={tagPickerRef}>
+  // On mobile, before the full-screen view is opened, show a tappable bar
+  // that launches the dedicated "New Task" view. This avoids focusing the
+  // small inline input, which makes iOS zoom in awkwardly.
+  if (isMobile && !isExpanded) {
+    return (
+      <button
+        type="button"
+        className={styles.mobileTrigger}
+        onClick={openOverlay}
+        aria-label="Add a new task"
+      >
+        <svg className={styles.mobileTriggerIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        <span className={styles.mobileTriggerText}>Add a new task...</span>
+      </button>
+    );
+  }
+
+  // The input field is shared between the desktop and mobile layouts.
+  const inputField = (
+    <input
+      ref={inputRef}
+      type="text"
+      className={styles.input}
+      placeholder="Add a new task..."
+      value={content}
+      onChange={(e) => setContent(e.target.value)}
+      disabled={isSubmitting}
+    />
+  );
+
+  // The tag picker is shared between the desktop and mobile layouts.
+  const tagPicker = (
+    <div className={styles.tagPickerWrapper} ref={tagPickerRef}>
         <button
           type="button"
           className={`${styles.tagBtn} ${selectedTags.length > 0 ? styles.hasSelection : ''}`}
@@ -530,9 +595,64 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
           </div>
         )}
       </div>
-      
-      <button 
-        type="submit" 
+  );
+
+  // Mobile: dedicated full-screen "New Task" view
+  if (isMobile && isExpanded) {
+    return (
+      <div className={styles.mobileOverlay} role="dialog" aria-modal="true" aria-label="New task">
+        <div className={styles.mobileHeader}>
+          <button
+            type="button"
+            className={styles.mobileBack}
+            onClick={closeOverlay}
+            aria-label="Go back"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <span className={styles.mobileTitle}>New Task</span>
+        </div>
+
+        <form className={styles.mobileForm} onSubmit={handleSubmit}>
+          <div className={styles.mobileBody}>
+            <div className={styles.mobileInputWrapper}>
+              {inputField}
+            </div>
+            <div className={styles.mobileTagRow}>
+              {tagPicker}
+            </div>
+          </div>
+
+          <div className={styles.mobileFooter}>
+            <button
+              type="submit"
+              className={styles.mobileSubmit}
+              disabled={!content.trim() || isSubmitting}
+            >
+              {isSubmitting ? 'Adding...' : 'Add task'}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // Desktop: inline bottom bar (unchanged)
+  return (
+    <form
+      className={`${styles.addTask} ${compact ? styles.compact : ''}`}
+      onSubmit={handleSubmit}
+    >
+      <div className={styles.inputWrapper}>
+        {inputField}
+      </div>
+
+      {tagPicker}
+
+      <button
+        type="submit"
         className={styles.button}
         disabled={!content.trim() || isSubmitting}
       >

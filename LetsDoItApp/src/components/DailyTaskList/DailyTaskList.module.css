@@ -377,12 +377,24 @@
   background: var(--card-bg);
 }
 
+@media (max-width: 768px) {
+  /* The inline form is replaced by a tappable trigger bar on mobile,
+     so pad the wrapper to inset the trigger nicely. */
+  .addTaskWrapper {
+    padding: 10px 12px;
+  }
+
+  .keyboardOpen .addTaskWrapper {
+    padding: 0 12px;
+  }
+}
+
 @media (max-width: 480px) {
   .deadlineBanners {
     gap: 6px;
     margin-bottom: 12px;
   }
-  
+
   .deadlineBanner {
     padding: 8px 12px;
     font-size: 12px;

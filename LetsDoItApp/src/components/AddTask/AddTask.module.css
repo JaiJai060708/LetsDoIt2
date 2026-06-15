@@ -655,6 +655,184 @@
   }
 }
 
+/* ============================================================
+   Mobile full-screen "New Task" view
+   ============================================================ */
+
+/* Tappable bar shown at the bottom of the list on mobile.
+   Tapping it opens the dedicated full-screen view. */
+.mobileTrigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--input-placeholder);
+  background: var(--input-bg);
+  border: 1px solid var(--border-medium);
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobileTrigger:active {
+  background: var(--bg-tertiary);
+  border-color: var(--primary-color);
+}
+
+.mobileTriggerIcon {
+  flex-shrink: 0;
+  color: var(--primary-color);
+}
+
+.mobileTriggerText {
+  flex: 1;
+}
+
+/* Full-screen overlay that hosts the new-task form */
+.mobileOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary, var(--bg-secondary));
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Respect notches / home indicator on iOS */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobileHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-tertiary);
+}
+
+.mobileBack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobileBack:active {
+  background: var(--bg-active);
+}
+
+.mobileTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mobileForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.mobileBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mobileInputWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Larger input avoids iOS auto-zoom (font-size must be >= 16px) and
+   gives the dedicated view a clean, focused feel. */
+.mobileInputWrapper .input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+
+.mobileTagRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* In the full-screen view the tag dropdown opens downward and fills
+   the available width, instead of the upward bubble used on desktop. */
+.mobileTagRow .tagDropdown {
+  top: calc(100% + 8px);
+  bottom: auto;
+  left: 0;
+  right: auto;
+  width: min(320px, calc(100vw - 36px));
+}
+
+.mobileTagRow .tagBtn {
+  min-width: 44px;
+  height: 44px;
+  font-size: 18px;
+}
+
+.mobileFooter {
+  padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-tertiary);
+}
+
+.mobileSubmit {
+  width: 100%;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-inverse);
+  background: var(--primary-color);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobileSubmit:active:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.mobileSubmit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Completed Tags Section */
 .completedToggle {
   display: flex;
