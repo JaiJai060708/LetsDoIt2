@@ -28,6 +28,9 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
   // inline bottom bar (which causes iOS to zoom into the small input).
   const [isMobile, setIsMobile] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  // Tracks the visible viewport so the overlay (and its send button) stays
+  // above the on-screen keyboard on iOS.
+  const [overlayMetrics, setOverlayMetrics] = useState(null);
   
   // Tag management states
   const [isCreating, setIsCreating] = useState(false);
@@ -65,9 +68,13 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
   }, []);
 
   // When the full-screen mobile view opens: focus the input, lock background
-  // scroll, and allow closing via the Escape key.
+  // scroll, allow closing via the Escape key, and keep the overlay sized to
+  // the visible viewport so the send button stays above the keyboard.
   useEffect(() => {
-    if (!(isMobile && isExpanded)) return;
+    if (!(isMobile && isExpanded)) {
+      setOverlayMetrics(null);
+      return;
+    }
 
     inputRef.current?.focus();
 
@@ -79,9 +86,24 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
     };
     document.addEventListener('keydown', handleKeyDown);
 
+    const viewport = window.visualViewport;
+    const updateMetrics = () => {
+      if (!viewport) return;
+      setOverlayMetrics({ top: viewport.offsetTop, height: viewport.height });
+    };
+    updateMetrics();
+    if (viewport) {
+      viewport.addEventListener('resize', updateMetrics);
+      viewport.addEventListener('scroll', updateMetrics);
+    }
+
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', handleKeyDown);
+      if (viewport) {
+        viewport.removeEventListener('resize', updateMetrics);
+        viewport.removeEventListener('scroll', updateMetrics);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMobile, isExpanded]);
@@ -599,8 +621,13 @@ function AddTask({ onTaskCreated, defaultDueDate = null, compact = false }) {
 
   // Mobile: dedicated full-screen "New Task" view
   if (isMobile && isExpanded) {
+    // Size the overlay to the visible viewport so the footer (send button)
+    // never disappears behind the on-screen keyboard.
+    const overlayStyle = overlayMetrics
+      ? { top: `${overlayMetrics.top}px`, height: `${overlayMetrics.height}px`, bottom: 'auto' }
+      : undefined;
     return (
-      <div className={styles.mobileOverlay} role="dialog" aria-modal="true" aria-label="New task">
+      <div className={styles.mobileOverlay} style={overlayStyle} role="dialog" aria-modal="true" aria-label="New task">
         <div className={styles.mobileHeader}>
           <button
             type="button"
