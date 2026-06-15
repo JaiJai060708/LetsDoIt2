@@ -548,6 +548,7 @@
     position: sticky;
     bottom: 0;
     z-index: 10;
+    padding: 10px 12px;
     background: var(--card-bg);
     border-radius: 0 0 10px 10px;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
